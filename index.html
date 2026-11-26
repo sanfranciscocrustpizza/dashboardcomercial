@@ -278,6 +278,7 @@ let charts = {};
 let currentFiltered = [];
 let chatHistory = [];
 let geminiApiKey = localStorage.getItem('jhonny_gemini_key') || '';
+let lastAiTopic = 'general';
 
 function updateApiBadge() {
   const badge = document.getElementById('aiModeBadge');
@@ -663,6 +664,7 @@ function appendMessage(role, htmlContent) {
 
 function resetConversation(silentFilterChange = false) {
   chatHistory = [];
+  lastAiTopic = 'general';
   const box = document.getElementById('aiOutput');
   box.innerHTML = '';
 
@@ -696,9 +698,9 @@ function quickAsk(questionText) {
   askAI();
 }
 
-// Motor local inteligente cuando no hay Gemini API Key configurada
+// Motor local inteligente conversacional cuando no hay Gemini API Key configurada
 function generateLocalConsultantReply(q, ctx) {
-  const ql = q.toLowerCase();
+  const ql = q.toLowerCase().trim();
   const topProd = ctx.prods[0];
   const secondProd = ctx.prods[1] || topProd;
   const lowProd = ctx.prods[ctx.prods.length - 1];
@@ -709,9 +711,46 @@ function generateLocalConsultantReply(q, ctx) {
   const topCanal = ctx.canals[0];
   const lowCanal = ctx.canals[ctx.canals.length - 1];
 
-  // 1. Si pide estrategias / plan de acción / ideas
-  if (ql.includes('estrategia') || ql.includes('plan') || ql.includes('idea') || ql.includes('recomienda') || ql.includes('hacer') || ql.includes('aumentar') || ql.includes('subir')) {
-    return `Aquí tienes <strong>5 estrategias concretas</strong> basadas directamente en los indicadores que tienes filtrados hoy (Ticket promedio: <strong>$${ctx.ticket.toFixed(2)}</strong> | Margen: <strong>${ctx.margen.toFixed(1)}%</strong>):<br/><br/>
+  const isGreeting = /^(hola|buenas|qué tal|que tal|hey|hi|alo|holi)(\s|$|!|\?|,)/i.test(ql) || ql.includes('hola jhony') || ql.includes('hola johnny');
+  const isThanks = /(gracias|excelente|genial|perfecto|bacán|chévere|vale)/i.test(ql) && ql.length < 35;
+  const isFollowUp = /(y por qué|por que|por qué|explícame más|explicame mas|profundiza|más detalle|mas detalle|y eso|y cómo|y como|qué más|que mas)/i.test(ql);
+
+  // 0A. Saludos o inicio de charla
+  if (isGreeting) {
+    lastAiTopic = 'general';
+    return `¡Hola! Qué gusto saludarte. Aquí estoy, revisando los números de <strong>San Francisco Crust Pizza</strong> contigo.<br/><br/>
+    En la vista actual tenemos <strong>$${ctx.totalV.toLocaleString('en-US', {maximumFractionDigits:0})}</strong> en ventas, <strong>$${ctx.totalU.toLocaleString('en-US', {maximumFractionDigits:0})}</strong> de utilidad bruta (<strong>${ctx.margen.toFixed(1)}%</strong> de margen) y un ticket promedio de <strong>$${ctx.ticket.toFixed(2)}</strong>.<br/><br/>
+    Hoy la atención está en <strong>${topSuc[0]}</strong> (nuestra sucursal más fuerte) frente a <strong>${lowSuc[0]}</strong> (donde hay más espacio para empujar). ¿Por dónde quieres que arranquemos: revisamos <em>problemas reales</em>, armamos <em>5 estrategias</em> o analizamos algún filtro en particular?`;
+  }
+
+  // 0B. Agradecimientos / cierre amable
+  if (isThanks) {
+    return `¡A ti! Siempre que muevas un filtro o cargues un nuevo <code>.xlsx</code>, aquí sigo para contrastar hipótesis y tomar decisiones con datos en mano. ¿Revisamos algún otro ángulo del negocio o lo dejamos ahí por hoy?`;
+  }
+
+  // Detectar tema actual o heredar el último tema si es pregunta de seguimiento
+  let topic = lastAiTopic;
+  if (ql.includes('estrategia') || ql.includes('plan') || ql.includes('idea') || ql.includes('recomienda') || ql.includes('hacer') || ql.includes('aumentar') || ql.includes('subir') || ql.includes('aplicar')) {
+    topic = 'estrategias';
+  } else if (ql.includes('problema') || ql.includes('critic') || ql.includes('crític') || ql.includes('mal') || ql.includes('debilidad') || ql.includes('perdiendo') || ql.includes('riesgo') || ql.includes('foco rojo')) {
+    topic = 'critica';
+  } else if (ql.includes('sucursal') || ql.includes('ciudad') || ql.includes('local') || ql.includes('tienda')) {
+    topic = 'sucursales';
+  } else if (ql.includes('producto') || ql.includes('pizza') || ql.includes('menu') || ql.includes('menú') || ql.includes('ticket') || ql.includes('combo')) {
+    topic = 'productos';
+  } else if (ql.includes('segmento') || ql.includes('cliente') || ql.includes('canal')) {
+    topic = 'segmentos';
+  } else if (!isFollowUp) {
+    topic = 'general';
+  }
+  lastAiTopic = topic;
+
+  // 1. Estrategias
+  if (topic === 'estrategias') {
+    const prefix = isFollowUp
+      ? `Bajando un nivel más sobre esas estrategias y cómo aterrizarlas en la operación:<br/><br/>`
+      : `Aquí tienes <strong>5 estrategias concretas</strong> basadas directamente en los indicadores que tienes filtrados hoy (Ticket promedio: <strong>$${ctx.ticket.toFixed(2)}</strong> | Margen: <strong>${ctx.margen.toFixed(1)}%</strong>):<br/><br/>`;
+    return `${prefix}
     <strong>1. Bundle de Anclaje sobre "${topProd[0]}":</strong> Como es tu producto de mayor tracción ($${topProd[1].venta.toLocaleString('en-US', {maximumFractionDigits:0})}), crea un combo "Dúo Crust" sumando <em>${lowProd[0]}</em> o bebidas con un descuento del 10%. Objetivo: subir tu ticket promedio de $${ctx.ticket.toFixed(2)} a <strong>$${(ctx.ticket * 1.14).toFixed(2)}</strong> sin sacrificar margen.<br/><br/>
     <strong>2. Plan de Rescate en "${lowSuc[0]}":</strong> Es tu sucursal con menor facturación frente a <strong>${topSuc[0]}</strong>. Aplica geolocalización en pauta local (radio de 3 km) en horarios valle (martes a jueves de 14:00 a 17:00) con entrega gratis en pedidos mayores a $${Math.round(ctx.ticket)}.<br/><br/>
     <strong>3. Activación del Segmento "${lowSeg[0]}":</strong> Es el grupo que menos aporta actualmente frente a <strong>${topSeg[0]}</strong>. Diseña una oferta específica para este perfil (ej. paquetes ejecutivos o suscripción mensual recurrente) para elevar la frecuencia de compra actual (<strong>${ctx.freq.toFixed(1)} pedidos/cliente</strong>).<br/><br/>
@@ -719,35 +758,47 @@ function generateLocalConsultantReply(q, ctx) {
     <strong>5. Ingeniería de Menú y Rentabilidad:</strong> Tu margen bruto es del <strong>${ctx.margen.toFixed(1)}%</strong>. Revisa el costo unitario de los productos de baja rotación como <strong>${lowProd[0]}</strong>; si su margen individual está por debajo del 55%, reubícalo como complemento en combos o ajusta su porción/precio.`;
   }
 
-  // 2. Si pide crítica / problemas / debilidades / riesgos
-  if (ql.includes('critic') || ql.includes('crític') || ql.includes('mal') || ql.includes('problema') || ql.includes('debilidad') || ql.includes('perdiendo') || ql.includes('riesgo')) {
+  // 2. Crítica / Problemas reales
+  if (topic === 'critica') {
     const prodShare = ((topProd[1].venta / ctx.totalV) * 100).toFixed(1);
     const sucGap = (((topSuc[1].venta - lowSuc[1].venta) / topSuc[1].venta) * 100).toFixed(1);
-    return `Siendo 100% honesto y crítico con los datos de esta vista, veo <strong>3 focos rojos</strong> que deberías atender antes de expandir gastos:<br/><br/>
+    const introCrit = isFollowUp
+      ? `Si profundizamos en por qué pasan estos desajustes en el día a día:<br/><br/>`
+      : `Siendo 100% honesto y crítico con los datos de esta vista, veo <strong>3 problemas reales</strong> que deberías atender antes de meter más presupuesto a ciegas:<br/><br/>`;
+    return `${introCrit}
     • <strong>Desbalance entre sucursales (${sucGap}% de brecha):</strong> <strong>${topSuc[0]}</strong> ($${topSuc[1].venta.toLocaleString('en-US', {maximumFractionDigits:0})}) está cargando con el resultado mientras <strong>${lowSuc[0]}</strong> ($${lowSuc[1].venta.toLocaleString('en-US', {maximumFractionDigits:0})}) rinde muy por debajo. Hay que auditar tiempos de preparación, servicio o cobertura en esa zona.<br/>
     • <strong>Concentración de ingresos:</strong> <strong>${topProd[0]}</strong> representa el <strong>${prodShare}%</strong> de las ventas totales. Depender tanto de un solo ítem te vuelve vulnerable si sube el costo de sus insumos.<br/>
     • <strong>Techo en el Ticket Promedio ($${ctx.ticket.toFixed(2)}):</strong> Con ${ctx.clientes.toLocaleString('en-US')} clientes activos y ${Math.round(ctx.totalTx).toLocaleString('en-US')} órdenes, estás capturando volumen, pero falta venta cruzada (entradas/bebidas) en cada carrito para disparar la utilidad bruta sin gastar más en adquisición.`;
   }
 
-  // 3. Si pregunta por sucursales o ciudades
-  if (ql.includes('sucursal') || ql.includes('ciudad') || ql.includes('local') || ql.includes('tienda')) {
+  // 3. Sucursales / Ciudades
+  if (topic === 'sucursales') {
     const rankingSuc = ctx.sucs.map((s, idx) => `${idx + 1}. <strong>${s[0]}</strong>: $${s[1].venta.toLocaleString('en-US', {maximumFractionDigits:0})} (Margen: ${((s[1].util / s[1].venta)*100).toFixed(1)}%)`).join('<br/>');
     return `Así está el ranking real de tus sucursales en la selección actual:<br/><br/>${rankingSuc}<br/><br/>
     <strong>Mi lectura crítica:</strong> No repliques el mismo presupuesto de marketing en todas. Usa a <strong>${topSuc[0]}</strong> como laboratorio de rentabilidad (ticket y upselling) y enfoca campañas agresivas de tráfico en <strong>${lowSuc[0]}</strong> para nivelar el punto de equilibrio.`;
   }
 
-  // 4. Si pregunta por productos / menú / ticket
-  if (ql.includes('producto') || ql.includes('pizza') || ql.includes('menu') || ql.includes('menú') || ql.includes('ticket') || ql.includes('combo')) {
+  // 4. Productos / Ticket
+  if (topic === 'productos') {
     return `Analizando tu mix de productos sobre <strong>$${ctx.totalV.toLocaleString('en-US', {maximumFractionDigits:0})}</strong> en ventas:<br/><br/>
     • <strong>Líderes:</strong> <strong>${topProd[0]}</strong> ($${topProd[1].venta.toLocaleString('en-US', {maximumFractionDigits:0})}) y <strong>${secondProd[0]}</strong> ($${secondProd[1].venta.toLocaleString('en-US', {maximumFractionDigits:0})}) son tus locomotoras.<br/>
     • <strong>Rezago:</strong> <strong>${lowProd[0]}</strong> ($${lowProd[1].venta.toLocaleString('en-US', {maximumFractionDigits:0})}) tiene muy baja salida.<br/><br/>
     <strong>Decisión recomendada:</strong> Para mover el ticket promedio de <strong>$${ctx.ticket.toFixed(2)}</strong> hacia arriba, configura en caja y en apps de <em>${topCanal[0]}</em> una sugerencia automática de acompañamiento al elegir <strong>${topProd[0]}</strong>.`;
   }
 
-  // 5. Respuesta conversacional general adaptada a la pregunta
-  return `Sobre tu pregunta <em>"${q}"</em>, cruzando los indicadores actuales (<strong>$${ctx.totalV.toLocaleString('en-US', {maximumFractionDigits:0})}</strong> en ventas, utilidad de <strong>$${ctx.totalU.toLocaleString('en-US', {maximumFractionDigits:0})}</strong> y margen del <strong>${ctx.margen.toFixed(1)}%</strong>):<br/><br/>
-  Tu mayor palanca inmediata está en replicar el comportamiento de compra del segmento <strong>${topSeg[0]}</strong> dentro de la sucursal <strong>${lowSuc[0]}</strong>, impulsando combos alrededor de <strong>${topProd[0]}</strong> en el canal <strong>${topCanal[0]}</strong>.<br/><br/>
-  Si quieres que bajemos esto a un plan paso a paso, dime: ¿prefieres que nos enfoquemos en <strong>rentabilidad por producto</strong>, <strong>recuperar sucursales bajas</strong> o <strong>fidelizar clientes</strong>?`;
+  // 5. Segmentos / Canales
+  if (topic === 'segmentos') {
+    const segList = ctx.segs.map(s => `• <strong>${s[0]}</strong>: $${s[1].venta.toLocaleString('en-US', {maximumFractionDigits:0})}`).join('<br/>');
+    const canList = ctx.canals.map(c => `• <strong>${c[0]}</strong>: $${c[1].venta.toLocaleString('en-US', {maximumFractionDigits:0})}`).join('<br/>');
+    return `Así se reparte la demanda por <strong>segmento</strong> y <strong>canal</strong> en tu filtro actual:<br/><br/>
+    <strong>Segmentos:</strong><br/>${segList}<br/><br/>
+    <strong>Canales:</strong><br/>${canList}<br/><br/>
+    <strong>Lectura crítica:</strong> El segmento <strong>${topSeg[0]}</strong> y el canal <strong>${topCanal[0]}</strong> son tu base principal; si logras activar compras repetidas en <strong>${lowSeg[0]}</strong> dentro de <strong>${lowCanal[0]}</strong>, ganas volumen incremental sin saturar tu canal principal.`;
+  }
+
+  // 6. Conversación general si escribe otra cosa distinta
+  return `Entiendo el punto: <em>"${q}"</em>. Viendo la foto completa de esta selección (<strong>$${ctx.totalV.toLocaleString('en-US', {maximumFractionDigits:0})}</strong> en ventas, <strong>${ctx.margen.toFixed(1)}%</strong> de margen y ticket de <strong>$${ctx.ticket.toFixed(2)}</strong>), lo más relevante ahora mismo es la diferencia entre <strong>${topSuc[0]}</strong> y <strong>${lowSuc[0]}</strong>, y el peso de <strong>${topProd[0]}</strong>.<br/><br/>
+  ¿Quieres que lo bajemos a <strong>5 estrategias</strong>, que hagamos una <strong>crítica de debilidades</strong> o que revisemos <strong>sucursales y productos</strong>?`;
 }
 
 async function askAI() {
