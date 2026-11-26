@@ -45,7 +45,10 @@
     .glass-input:focus {
       border-color: #f59e0b;
     }
-    /* Scrollbar sutil para el chat de Jhonny Crust */
+    .glass-input:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
     #aiOutput::-webkit-scrollbar { width: 5px; }
     #aiOutput::-webkit-scrollbar-thumb { background: rgba(251, 191, 36, 0.35); border-radius: 999px; }
   </style>
@@ -62,8 +65,13 @@
         </h1>
       </div>
       <p class="text-xs md:text-sm text-slate-300 mt-1">
-        Inteligencia Comercial &amp; Rentabilidad Operativa • <span id="dataStatus" class="text-amber-300 font-medium">Datos base cargados (Sube tus .xlsx para actualizar en vivo)</span>
+        Inteligencia Comercial &amp; Rentabilidad Operativa • <span id="dataStatus" class="text-amber-300 font-medium">Esperando carga de bases de datos (.xlsx)</span>
       </p>
+      <div class="flex flex-wrap items-center gap-4 mt-1.5 text-[11px] text-slate-400">
+        <span class="flex items-center gap-1"><span class="text-slate-500 font-bold">●</span> Sin cargar</span>
+        <span class="flex items-center gap-1"><span class="text-emerald-400 font-bold">✓</span> Carga conjunta</span>
+        <span class="flex items-center gap-1"><span class="text-sky-400 font-bold">✓</span> Carga individual</span>
+      </div>
     </div>
 
     <div class="flex flex-wrap items-center gap-2.5">
@@ -72,66 +80,91 @@
         <input type="file" id="fileMultiple" accept=".xlsx,.xls" multiple class="hidden" />
       </label>
 
-      <label class="cursor-pointer glass-input hover:border-amber-400 flex items-center gap-2 text-xs font-semibold" title="Reemplazar solo Ventas">
+      <label id="btnLabelVentas" class="cursor-pointer glass-input hover:border-sky-400 flex items-center gap-2 text-xs font-semibold transition" title="Cargar o reemplazar solo Ventas">
         <span>📄 Ventas (.xlsx)</span>
         <input type="file" id="fileVentas" accept=".xlsx,.xls" class="hidden" />
-        <span id="badgeVentas" class="text-emerald-400">●</span>
-      </label>
-      <label class="cursor-pointer glass-input hover:border-amber-400 flex items-center gap-2 text-xs font-semibold" title="Reemplazar solo Clientes">
-        <span>👥 Clientes (.xlsx)</span>
-        <input type="file" id="fileClientes" accept=".xlsx,.xls" class="hidden" />
-        <span id="badgeClientes" class="text-emerald-400">●</span>
-      </label>
-      <label class="cursor-pointer glass-input hover:border-amber-400 flex items-center gap-2 text-xs font-semibold" title="Reemplazar solo Productos">
-        <span>📦 Productos (.xlsx)</span>
-        <input type="file" id="fileProductos" accept=".xlsx,.xls" class="hidden" />
-        <span id="badgeProductos" class="text-emerald-400">●</span>
+        <span id="badgeVentas" class="text-slate-500 font-extrabold">●</span>
       </label>
 
-      <button onclick="resetFilters()" class="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-semibold transition">
+      <label id="btnLabelClientes" class="cursor-pointer glass-input hover:border-sky-400 flex items-center gap-2 text-xs font-semibold transition" title="Cargar o reemplazar solo Clientes">
+        <span>👥 Clientes (.xlsx)</span>
+        <input type="file" id="fileClientes" accept=".xlsx,.xls" class="hidden" />
+        <span id="badgeClientes" class="text-slate-500 font-extrabold">●</span>
+      </label>
+
+      <label id="btnLabelProductos" class="cursor-pointer glass-input hover:border-sky-400 flex items-center gap-2 text-xs font-semibold transition" title="Cargar o reemplazar solo Productos">
+        <span>📦 Productos (.xlsx)</span>
+        <input type="file" id="fileProductos" accept=".xlsx,.xls" class="hidden" />
+        <span id="badgeProductos" class="text-slate-500 font-extrabold">●</span>
+      </label>
+
+      <button id="btnResetFilters" onclick="resetFilters()" disabled class="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 disabled:opacity-40 disabled:cursor-not-allowed text-xs font-semibold transition">
         Limpiar Filtros
       </button>
     </div>
   </header>
 
+  <!-- BANNER DE INSTRUCCIÓN INICIAL -->
+  <div id="emptyBanner" class="glass-card p-5 mb-6 border-amber-400/50 bg-amber-500/10 flex flex-col sm:flex-row items-center justify-between gap-4">
+    <div class="flex items-center gap-3.5">
+      <div class="w-11 h-11 rounded-2xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-2xl shrink-0">
+        📊
+      </div>
+      <div>
+        <h2 class="text-sm md:text-base font-extrabold text-amber-300">
+          Para visualizar los indicadores e interactuar con la Jhonny Crust IA, primero suba las bases de datos
+        </h2>
+        <p class="text-xs text-slate-300 mt-0.5">
+          Usa <strong>📂 Cargar archivos</strong> para subir tus 3 libros Excel juntos (visto <span class="text-emerald-400 font-bold">verde</span>) o súbelos uno por uno en sus botones respectivos (visto <span class="text-sky-400 font-bold">azul</span>).
+        </p>
+      </div>
+    </div>
+  </div>
+
   <!-- FILTROS ESTRATÉGICOS -->
-  <section class="glass-card p-4 mb-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-3">
+  <section class="glass-card p-4 mb-6 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
     <div>
       <label class="block text-[11px] uppercase tracking-wider text-slate-400 mb-1">Fecha Inicio</label>
-      <input type="date" id="fFechaInicio" class="glass-input w-full" onchange="applyFilters()" />
+      <input type="date" id="fFechaInicio" disabled class="glass-input w-full" onchange="applyFilters()" />
     </div>
     <div>
       <label class="block text-[11px] uppercase tracking-wider text-slate-400 mb-1">Fecha Fin</label>
-      <input type="date" id="fFechaFin" class="glass-input w-full" onchange="applyFilters()" />
+      <input type="date" id="fFechaFin" disabled class="glass-input w-full" onchange="applyFilters()" />
     </div>
     <div>
       <label class="block text-[11px] uppercase tracking-wider text-slate-400 mb-1">Ciudad</label>
-      <select id="fCiudad" class="glass-input w-full" onchange="applyFilters()">
+      <select id="fCiudad" disabled class="glass-input w-full" onchange="applyFilters()">
         <option value="">Todas las ciudades</option>
       </select>
     </div>
     <div>
       <label class="block text-[11px] uppercase tracking-wider text-slate-400 mb-1">Sucursal</label>
-      <select id="fSucursal" class="glass-input w-full" onchange="applyFilters()">
+      <select id="fSucursal" disabled class="glass-input w-full" onchange="applyFilters()">
         <option value="">Todas las sucursales</option>
       </select>
     </div>
     <div>
       <label class="block text-[11px] uppercase tracking-wider text-slate-400 mb-1">Segmento Cliente</label>
-      <select id="fSegmento" class="glass-input w-full" onchange="applyFilters()">
+      <select id="fSegmento" disabled class="glass-input w-full" onchange="applyFilters()">
         <option value="">Todos los segmentos</option>
       </select>
     </div>
     <div>
       <label class="block text-[11px] uppercase tracking-wider text-slate-400 mb-1">Producto</label>
-      <select id="fProducto" class="glass-input w-full" onchange="applyFilters()">
+      <select id="fProducto" disabled class="glass-input w-full" onchange="applyFilters()">
         <option value="">Todos los productos</option>
       </select>
     </div>
     <div>
       <label class="block text-[11px] uppercase tracking-wider text-amber-300 mb-1">Canal (Extra)</label>
-      <select id="fCanal" class="glass-input w-full" onchange="applyFilters()">
+      <select id="fCanal" disabled class="glass-input w-full" onchange="applyFilters()">
         <option value="">Todos los canales</option>
+      </select>
+    </div>
+    <div>
+      <label class="block text-[11px] uppercase tracking-wider text-sky-300 mb-1">Método de pago</label>
+      <select id="fMetodoPago" disabled class="glass-input w-full" onchange="applyFilters()">
+        <option value="">Todos los métodos</option>
       </select>
     </div>
   </section>
@@ -140,32 +173,32 @@
   <section class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
     <div class="glass-card p-4">
       <span class="text-xs text-slate-400">Ventas Totales</span>
-      <p id="kpiVentas" class="text-xl md:text-2xl font-extrabold text-white mt-1">$1,357,882</p>
-      <span class="text-[11px] text-emerald-400">Ingresos netos USD</span>
+      <p id="kpiVentas" class="text-xl md:text-2xl font-extrabold text-slate-500 mt-1">—</p>
+      <span class="text-[11px] text-slate-400">Ingresos netos USD</span>
     </div>
     <div class="glass-card p-4">
       <span class="text-xs text-slate-400">Utilidad Bruta</span>
-      <p id="kpiUtilidad" class="text-xl md:text-2xl font-extrabold text-amber-300 mt-1">$813,714</p>
+      <p id="kpiUtilidad" class="text-xl md:text-2xl font-extrabold text-slate-500 mt-1">—</p>
       <span class="text-[11px] text-slate-400">Venta Neta − Costo Total</span>
     </div>
     <div class="glass-card p-4">
       <span class="text-xs text-slate-400">Margen Bruto</span>
-      <p id="kpiMargen" class="text-xl md:text-2xl font-extrabold text-emerald-400 mt-1">59.9%</p>
+      <p id="kpiMargen" class="text-xl md:text-2xl font-extrabold text-slate-500 mt-1">—</p>
       <span class="text-[11px] text-slate-400">Rentabilidad operativa</span>
     </div>
     <div class="glass-card p-4">
       <span class="text-xs text-slate-400">Ticket Promedio</span>
-      <p id="kpiTicket" class="text-xl md:text-2xl font-extrabold text-sky-300 mt-1">$29.58</p>
+      <p id="kpiTicket" class="text-xl md:text-2xl font-extrabold text-slate-500 mt-1">—</p>
       <span class="text-[11px] text-slate-400">Por transacción</span>
     </div>
     <div class="glass-card p-4">
       <span class="text-xs text-slate-400">N° de Clientes</span>
-      <p id="kpiClientes" class="text-xl md:text-2xl font-extrabold text-purple-300 mt-1">1,000</p>
+      <p id="kpiClientes" class="text-xl md:text-2xl font-extrabold text-slate-500 mt-1">—</p>
       <span class="text-[11px] text-slate-400">Clientes únicos activos</span>
     </div>
     <div class="glass-card p-4">
       <span class="text-xs text-slate-400">N° Transacciones</span>
-      <p id="kpiTx" class="text-xl md:text-2xl font-extrabold text-rose-300 mt-1">45,900</p>
+      <p id="kpiTx" class="text-xl md:text-2xl font-extrabold text-slate-500 mt-1">—</p>
       <span class="text-[11px] text-slate-400">Órdenes registradas</span>
     </div>
   </section>
@@ -190,8 +223,8 @@
             <div>
               <div class="flex items-center gap-2">
                 <h2 class="text-sm font-extrabold text-amber-300 leading-tight">Jhonny Crust</h2>
-                <span id="aiModeBadge" class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
-                  Motor Analítico Activo
+                <span id="aiModeBadge" class="text-[10px] px-2 py-0.5 rounded-full bg-slate-700/60 text-slate-300 border border-white/10">
+                  En espera de datos
                 </span>
               </div>
               <p class="text-[11px] text-slate-400">Director Comercial IA • Crítico de Rentabilidad y Estrategia</p>
@@ -202,7 +235,7 @@
             <button onclick="toggleApiKeyBox()" class="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-slate-200 text-[11px] font-semibold transition" title="Conectar Gemini API para IA generativa libre">
               ⚙️ API IA
             </button>
-            <button onclick="resetConversation()" class="px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-[11px] font-semibold transition">
+            <button id="btnResetChat" onclick="resetConversation()" disabled class="px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 disabled:opacity-40 disabled:cursor-not-allowed text-amber-300 text-[11px] font-semibold transition">
               Nuevo Diagnóstico
             </button>
           </div>
@@ -221,13 +254,13 @@
 
         <!-- Chips de preguntas rápidas -->
         <div class="flex flex-wrap gap-1.5 mb-2.5">
-          <button onclick="quickAsk('Dame 5 estrategias accionables para aumentar las ventas y el margen según estos datos')" class="text-[11px] px-2.5 py-1 rounded-lg bg-white/5 hover:bg-amber-500/20 hover:text-amber-200 border border-white/10 transition">
+          <button id="chip1" disabled onclick="quickAsk('Dame 5 estrategias accionables para aumentar las ventas y el margen según estos datos')" class="text-[11px] px-2.5 py-1 rounded-lg bg-white/5 hover:bg-amber-500/20 hover:text-amber-200 disabled:opacity-40 disabled:cursor-not-allowed border border-white/10 transition">
             💡 Dame 5 estrategias
           </button>
-          <button onclick="quickAsk('Hazme una crítica honesta: ¿dónde estamos perdiendo dinero o eficiencia?')" class="text-[11px] px-2.5 py-1 rounded-lg bg-white/5 hover:bg-amber-500/20 hover:text-amber-200 border border-white/10 transition">
+          <button id="chip2" disabled onclick="quickAsk('Hazme una crítica honesta: ¿dónde estamos perdiendo dinero o eficiencia?')" class="text-[11px] px-2.5 py-1 rounded-lg bg-white/5 hover:bg-amber-500/20 hover:text-amber-200 disabled:opacity-40 disabled:cursor-not-allowed border border-white/10 transition">
             🔍 Crítica de debilidades
           </button>
-          <button onclick="quickAsk('¿Cómo subo el ticket promedio y qué combos recomiendas?')" class="text-[11px] px-2.5 py-1 rounded-lg bg-white/5 hover:bg-amber-500/20 hover:text-amber-200 border border-white/10 transition">
+          <button id="chip3" disabled onclick="quickAsk('¿Cómo subo el ticket promedio y qué combos recomiendas?')" class="text-[11px] px-2.5 py-1 rounded-lg bg-white/5 hover:bg-amber-500/20 hover:text-amber-200 disabled:opacity-40 disabled:cursor-not-allowed border border-white/10 transition">
             📈 Subir ticket promedio
           </button>
         </div>
@@ -237,8 +270,8 @@
       </div>
 
       <div class="mt-3 pt-2.5 border-t border-white/10 flex gap-2">
-        <input id="aiQuestion" type="text" placeholder="Conversa con Jhonny Crust (ej: Dame 5 estrategias para aplicar hoy)..." class="glass-input flex-1 text-xs" onkeydown="if(event.key==='Enter') askAI()" />
-        <button id="btnSendAI" onclick="askAI()" class="px-4 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-bold text-xs transition">
+        <input id="aiQuestion" type="text" disabled placeholder="Primero suba las bases de datos para conversar con Jhonny Crust..." class="glass-input flex-1 text-xs" onkeydown="if(event.key==='Enter') askAI()" />
+        <button id="btnSendAI" disabled onclick="askAI()" class="px-4 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 disabled:opacity-40 disabled:cursor-not-allowed text-slate-950 font-bold text-xs transition">
           Enviar
         </button>
       </div>
@@ -280,8 +313,78 @@ let chatHistory = [];
 let geminiApiKey = localStorage.getItem('jhonny_gemini_key') || '';
 let lastAiTopic = 'general';
 
+let uploadedV = null;
+let uploadedC = null;
+let uploadedP = null;
+
+function cleanId(val) {
+  return val === undefined || val === null ? '' : String(val).trim();
+}
+
+function formatProductLabel(prodObj, fallbackId) {
+  if (!prodObj) return fallbackId || 'Sin Producto';
+  const name = prodObj.Producto ? String(prodObj.Producto).trim() : '';
+  const size = prodObj.Tamaño ? String(prodObj.Tamaño).trim() : '';
+  if (name && size && size.toLowerCase() !== 'único' && size.toLowerCase() !== 'unico') {
+    return `${name} (${size})`;
+  }
+  return name || fallbackId || 'Sin Producto';
+}
+
+// Marca el visto en verde (carga conjunta) o azul (carga individual)
+function setUploadBadge(type, mode) {
+  const badgeMap = {
+    ventas: { badge: 'badgeVentas', label: 'btnLabelVentas' },
+    clientes: { badge: 'badgeClientes', label: 'btnLabelClientes' },
+    productos: { badge: 'badgeProductos', label: 'btnLabelProductos' }
+  };
+  const cfg = badgeMap[type];
+  if (!cfg) return;
+  const badgeEl = document.getElementById(cfg.badge);
+  const labelEl = document.getElementById(cfg.label);
+
+  badgeEl.textContent = '✓';
+  labelEl.classList.remove('border-emerald-400/50', 'border-sky-400/60');
+  badgeEl.classList.remove('text-slate-500', 'text-emerald-400', 'text-sky-400');
+
+  if (mode === 'individual') {
+    badgeEl.classList.add('text-sky-400');
+    labelEl.classList.add('border-sky-400/60');
+  } else {
+    badgeEl.classList.add('text-emerald-400');
+    labelEl.classList.add('border-emerald-400/50');
+  }
+}
+
+function setWorkspaceEnabled(enabled) {
+  const banner = document.getElementById('emptyBanner');
+  if (enabled) {
+    banner.classList.add('hidden');
+  } else {
+    banner.classList.remove('hidden');
+  }
+
+  ['fFechaInicio', 'fFechaFin', 'fCiudad', 'fSucursal', 'fSegmento', 'fProducto', 'fCanal', 'fMetodoPago',
+   'btnResetFilters', 'btnResetChat', 'chip1', 'chip2', 'chip3', 'aiQuestion', 'btnSendAI'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.disabled = !enabled;
+  });
+
+  const qInput = document.getElementById('aiQuestion');
+  qInput.placeholder = enabled
+    ? 'Conversa con Jhonny Crust (ej: Dame 5 estrategias para aplicar hoy)...'
+    : 'Primero suba las bases de datos para conversar con Jhonny Crust...';
+
+  updateApiBadge();
+}
+
 function updateApiBadge() {
   const badge = document.getElementById('aiModeBadge');
+  if (!uploadedV || !rawVentas.length) {
+    badge.textContent = '⏸ En espera de datos';
+    badge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-slate-700/60 text-slate-300 border border-white/10';
+    return;
+  }
   if (geminiApiKey) {
     badge.textContent = '✨ Gemini IA Conectado';
     badge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/40';
@@ -305,66 +408,36 @@ function saveApiKey() {
   }
   updateApiBadge();
   document.getElementById('apiKeyBox').classList.add('hidden');
-  appendMessage('assistant', geminiApiKey
-    ? '¡Listo! Ya tengo conexión directa con Gemini IA. Pregúntame lo que necesites sobre tus números, estrategias o puntos ciegos del negocio.'
-    : 'Clave eliminada. Sigo operando con mi motor analítico local sobre tus indicadores en vivo.');
+  if (uploadedV && rawVentas.length) {
+    appendMessage('assistant', geminiApiKey
+      ? '¡Listo! Ya tengo conexión directa con Gemini IA. Pregúntame lo que necesites sobre tus números, estrategias o puntos ciegos del negocio.'
+      : 'Clave eliminada. Sigo operando con mi motor analítico local sobre tus indicadores en vivo.');
+  }
 }
 
-function seedInitialData() {
-  const ciudades = {
-    'Dallas': ['Dallas Downtown', 'Dallas North'],
-    'Houston': ['Houston Central', 'Houston West'],
-    'Austin': ['Austin North', 'Austin South'],
-    'San Antonio': ['SA North', 'SA Downtown']
-  };
-  const segmentos = ['Familiar', 'Profesional', 'Corporativo', 'Estudiante'];
-  const canales = ['Delivery', 'Restaurante', 'Pickup'];
-  const productos = [
-    { id: 'P006', nombre: 'Suprema (L)', cat: 'Pizzas', precio: 26.5, costo: 10.8 },
-    { id: 'P008', nombre: 'Carnes (L)', cat: 'Pizzas', precio: 25.8, costo: 10.4 },
-    { id: 'P004', nombre: 'Hawaiana (L)', cat: 'Pizzas', precio: 18.47, costo: 6.83 },
-    { id: 'P002', nombre: 'Pepperoni (L)', cat: 'Pizzas', precio: 15.09, costo: 6.95 },
-    { id: 'P012', nombre: 'BBQ Chicken (L)', cat: 'Pizzas', precio: 22.4, costo: 8.9 },
-    { id: 'P014', nombre: 'Mexicana (L)', cat: 'Pizzas', precio: 21.9, costo: 8.7 },
-    { id: 'P016', nombre: '4 Quesos (L)', cat: 'Pizzas', precio: 20.5, costo: 7.9 },
-    { id: 'P028', nombre: 'Alitas 12 pzas', cat: 'Entradas', precio: 16.5, costo: 6.4 },
-    { id: 'P024', nombre: 'Boneless', cat: 'Entradas', precio: 14.2, costo: 5.5 },
-    { id: 'P022', nombre: 'Cheese Bread', cat: 'Entradas', precio: 9.8, costo: 3.4 }
-  ];
+function renderEmptyState() {
+  setWorkspaceEnabled(false);
 
-  productos.forEach(p => mapProductos[p.id] = p);
-  for (let i = 1; i <= 1000; i++) {
-    const cid = 'C' + String(i).padStart(5, '0');
-    mapClientes[cid] = { ClienteID: cid, Segmento: segmentos[i % segmentos.length] };
-  }
+  const kpiIds = ['kpiVentas', 'kpiUtilidad', 'kpiMargen', 'kpiTicket', 'kpiClientes', 'kpiTx'];
+  kpiIds.forEach(id => {
+    const el = document.getElementById(id);
+    el.textContent = '—';
+    el.className = 'text-xl md:text-2xl font-extrabold text-slate-500 mt-1';
+  });
 
-  const cityKeys = Object.keys(ciudades);
-  const scaleFactor = 45.9;
-  for (let i = 0; i < 1000; i++) {
-    const city = cityKeys[i % cityKeys.length];
-    const sucursales = ciudades[city];
-    const suc = sucursales[i % sucursales.length];
-    const prod = productos[i % productos.length];
-    const cid = 'C' + String((i % 1000) + 1).padStart(5, '0');
-    const month = String((i % 12) + 1).padStart(2, '0');
-    const year = i % 2 === 0 ? '2024' : '2025';
-    const venta = 29.58348 * scaleFactor;
-    const util = 17.72797 * scaleFactor;
+  renderChart('chartTendencia', 'line', [], []);
+  renderChart('chartProductos', 'bar', [], [], { indexAxis: 'y' });
+  renderChart('chartSucursal', 'bar', [], []);
+  renderChart('chartCiudad', 'doughnut', [], []);
+  renderChart('chartSegmento', 'bar', [], []);
 
-    rawVentas.push({
-      Fecha: `${year}-${month}-15`,
-      Ciudad: city,
-      Sucursal: suc,
-      ClienteID: cid,
-      ProductoID: prod.id,
-      ProductoNombre: prod.nombre,
-      Segmento: mapClientes[cid].Segmento,
-      Canal: canales[i % canales.length],
-      VentaNeta: venta,
-      UtilidadBruta: util,
-      TxCount: scaleFactor
-    });
-  }
+  const box = document.getElementById('aiOutput');
+  box.innerHTML = `
+    <div class="p-4 rounded-xl bg-white/5 border border-amber-400/25 text-slate-300">
+      <div class="text-[10px] uppercase tracking-wider text-amber-300 font-bold mb-1.5">🧑‍🍳 Jhonny Crust — En espera</div>
+      Para visualizar los indicadores e interactuar con la <strong>Jhonny Crust IA</strong>, primero suba las bases de datos (<code>Ventas</code>, <code>Clientes</code> y <code>Productos</code>) en la barra superior.
+    </div>
+  `;
 }
 
 function parseExcelDate(val) {
@@ -384,35 +457,51 @@ async function readWorkbook(file) {
   return XLSX.utils.sheet_to_json(sheet);
 }
 
-let uploadedV = null, uploadedC = null, uploadedP = null;
+function detectDatasetType(file, rows) {
+  const cols = Object.keys(rows[0] || {}).map(c => c.toLowerCase().trim());
+  const fname = (file.name || '').toLowerCase();
 
+  if (cols.includes('ventaid') || cols.includes('ventaneta') || fname.includes('venta')) {
+    return 'ventas';
+  }
+  if (cols.includes('segmento') || cols.includes('nps') || cols.includes('motivoperdida') || fname.includes('cliente')) {
+    return 'clientes';
+  }
+  if (cols.includes('categoria') || cols.includes('precioventausd') || cols.includes('costousd') || fname.includes('producto')) {
+    return 'productos';
+  }
+  return null;
+}
+
+// Carga conjunta (visto verde)
 document.getElementById('fileMultiple').addEventListener('change', async (e) => {
   const files = Array.from(e.target.files || []);
   if (!files.length) return;
+
   for (const file of files) {
     const rows = await readWorkbook(file);
     if (!rows.length) continue;
-    const cols = Object.keys(rows[0]).map(c => c.toLowerCase());
-    const fname = file.name.toLowerCase();
-    if (cols.includes('ventaid') || cols.includes('ventaneta') || fname.includes('venta')) {
+    const dtype = detectDatasetType(file, rows);
+    if (dtype === 'ventas') {
       uploadedV = rows;
-      document.getElementById('badgeVentas').textContent = '✓';
-    } else if (cols.includes('segmento') || cols.includes('nps') || fname.includes('cliente')) {
+      setUploadBadge('ventas', 'batch');
+    } else if (dtype === 'clientes') {
       uploadedC = rows;
-      document.getElementById('badgeClientes').textContent = '✓';
-    } else if (cols.includes('categoria') || cols.includes('precioventausd') || fname.includes('producto')) {
+      setUploadBadge('clientes', 'batch');
+    } else if (dtype === 'productos') {
       uploadedP = rows;
-      document.getElementById('badgeProductos').textContent = '✓';
+      setUploadBadge('productos', 'batch');
     }
   }
   rebuildFromUploads();
   e.target.value = '';
 });
 
+// Carga individual (visto azul)
 document.getElementById('fileVentas').addEventListener('change', async (e) => {
   if (!e.target.files[0]) return;
   uploadedV = await readWorkbook(e.target.files[0]);
-  document.getElementById('badgeVentas').textContent = '✓';
+  setUploadBadge('ventas', 'individual');
   rebuildFromUploads();
   e.target.value = '';
 });
@@ -420,7 +509,7 @@ document.getElementById('fileVentas').addEventListener('change', async (e) => {
 document.getElementById('fileClientes').addEventListener('change', async (e) => {
   if (!e.target.files[0]) return;
   uploadedC = await readWorkbook(e.target.files[0]);
-  document.getElementById('badgeClientes').textContent = '✓';
+  setUploadBadge('clientes', 'individual');
   rebuildFromUploads();
   e.target.value = '';
 });
@@ -428,7 +517,7 @@ document.getElementById('fileClientes').addEventListener('change', async (e) => 
 document.getElementById('fileProductos').addEventListener('change', async (e) => {
   if (!e.target.files[0]) return;
   uploadedP = await readWorkbook(e.target.files[0]);
-  document.getElementById('badgeProductos').textContent = '✓';
+  setUploadBadge('productos', 'individual');
   rebuildFromUploads();
   e.target.value = '';
 });
@@ -436,71 +525,96 @@ document.getElementById('fileProductos').addEventListener('change', async (e) =>
 function rebuildFromUploads() {
   if (uploadedC) {
     mapClientes = {};
-    uploadedC.forEach(c => { mapClientes[c.ClienteID] = c; });
+    uploadedC.forEach(c => {
+      const cid = cleanId(c.ClienteID);
+      if (cid) mapClientes[cid] = { ...c, ClienteID: cid };
+    });
   }
+
   if (uploadedP) {
     mapProductos = {};
     uploadedP.forEach(p => {
-      mapProductos[p.ProductoID] = {
-        ...p,
-        nombre: p.Tamaño && p.Tamaño !== 'Único' ? `${p.Producto} (${p.Tamaño})` : p.Producto
-      };
+      const pid = cleanId(p.ProductoID);
+      if (pid) {
+        mapProductos[pid] = {
+          ...p,
+          ProductoID: pid,
+          nombre: formatProductLabel(p, pid)
+        };
+      }
     });
   }
-  if (uploadedV) {
-    rawVentas = uploadedV.map(v => {
-      const cli = mapClientes[v.ClienteID] || {};
-      const prod = mapProductos[v.ProductoID] || {};
-      return {
-        Fecha: parseExcelDate(v.Fecha),
-        Ciudad: v.Ciudad || cli.Ciudad || 'Sin Ciudad',
-        Sucursal: v.Sucursal || 'Sin Sucursal',
-        ClienteID: v.ClienteID,
-        ProductoID: v.ProductoID,
-        ProductoNombre: prod.nombre || v.ProductoID,
-        Segmento: cli.Segmento || 'Sin Segmento',
-        Canal: v.Canal || 'General',
-        VentaNeta: Number(v.VentaNeta) || 0,
-        UtilidadBruta: Number(v.UtilidadBruta) || 0,
-        TxCount: 1
-      };
-    });
-    document.getElementById('dataStatus').textContent = `Base personalizada activa: ${rawVentas.length.toLocaleString()} registros cargados`;
-  } else if (uploadedC || uploadedP) {
-    rawVentas = rawVentas.map(v => ({
-      ...v,
-      Segmento: (mapClientes[v.ClienteID] && mapClientes[v.ClienteID].Segmento) || v.Segmento,
-      ProductoNombre: (mapProductos[v.ProductoID] && mapProductos[v.ProductoID].nombre) || v.ProductoNombre
-    }));
-    document.getElementById('dataStatus').textContent = `Catálogo/Clientes actualizados sobre la base activa`;
+
+  if (!uploadedV) {
+    const loadedCats = [uploadedC ? 'Clientes' : null, uploadedP ? 'Productos' : null].filter(Boolean).join(' y ');
+    document.getElementById('dataStatus').textContent = `Catálogo de ${loadedCats} cargado. Falta subir Ventas (.xlsx) para calcular indicadores.`;
+    renderEmptyState();
+    return;
   }
-  populateFilterOptions();
-  applyFilters();
+
+  // Reemplaza por completo rawVentas con la nueva base de ventas
+  rawVentas = uploadedV.map(v => {
+    const cid = cleanId(v.ClienteID);
+    const pid = cleanId(v.ProductoID);
+    const cli = mapClientes[cid] || {};
+    const prod = mapProductos[pid] || null;
+    const ventaNeta = Number(v.VentaNeta);
+    const costoTotal = Number(v.CostoTotal);
+    const utilidadBruta = v.UtilidadBruta !== undefined && v.UtilidadBruta !== ''
+      ? Number(v.UtilidadBruta)
+      : (Number.isFinite(ventaNeta) && Number.isFinite(costoTotal) ? ventaNeta - costoTotal : 0);
+
+    return {
+      Fecha: parseExcelDate(v.Fecha),
+      Ciudad: v.Ciudad ? String(v.Ciudad).trim() : (cli.Ciudad ? String(cli.Ciudad).trim() : 'Sin Ciudad'),
+      Sucursal: v.Sucursal ? String(v.Sucursal).trim() : 'Sin Sucursal',
+      ClienteID: cid,
+      ProductoID: pid,
+      ProductoNombre: formatProductLabel(prod, pid),
+      Segmento: cli.Segmento ? String(cli.Segmento).trim() : 'Sin Segmento',
+      Canal: v.Canal ? String(v.Canal).trim() : 'General',
+      MetodoPago: v.FormaPago ? String(v.FormaPago).trim() : (v.MetodoPago ? String(v.MetodoPago).trim() : 'No especificado'),
+      VentaNeta: Number.isFinite(ventaNeta) ? ventaNeta : 0,
+      UtilidadBruta: Number.isFinite(utilidadBruta) ? utilidadBruta : 0,
+      TxCount: 1
+    };
+  });
+
+  document.getElementById('dataStatus').textContent = `Base activa: ${rawVentas.length.toLocaleString()} transacciones cargadas`;
+  setWorkspaceEnabled(true);
+  resetFilters();
 }
 
 function populateFilterOptions() {
   const fill = (id, values, label) => {
     const sel = document.getElementById(id);
     const prev = sel.value;
+    const uniqueVals = [...new Set(values.map(v => v === undefined || v === null ? '' : String(v).trim()))]
+      .filter(Boolean)
+      .sort((a, b) => a.localeCompare(b, 'es'));
     sel.innerHTML = `<option value="">${label}</option>` +
-      [...new Set(values)].filter(Boolean).sort().map(v => `<option value="${v}">${v}</option>`).join('');
-    sel.value = prev;
+      uniqueVals.map(v => `<option value="${v}">${v}</option>`).join('');
+    sel.value = uniqueVals.includes(prev) ? prev : '';
   };
   fill('fCiudad', rawVentas.map(r => r.Ciudad), 'Todas las ciudades');
   fill('fSucursal', rawVentas.map(r => r.Sucursal), 'Todas las sucursales');
   fill('fSegmento', rawVentas.map(r => r.Segmento), 'Todos los segmentos');
   fill('fProducto', rawVentas.map(r => r.ProductoNombre), 'Todos los productos');
   fill('fCanal', rawVentas.map(r => r.Canal), 'Todos los canales');
+  fill('fMetodoPago', rawVentas.map(r => r.MetodoPago), 'Todos los métodos');
 }
 
 function resetFilters() {
-  ['fFechaInicio', 'fFechaFin', 'fCiudad', 'fSucursal', 'fSegmento', 'fProducto', 'fCanal'].forEach(id => {
+  if (!uploadedV || !rawVentas.length) return;
+  ['fFechaInicio', 'fFechaFin', 'fCiudad', 'fSucursal', 'fSegmento', 'fProducto', 'fCanal', 'fMetodoPago'].forEach(id => {
     document.getElementById(id).value = '';
   });
+  populateFilterOptions();
   applyFilters();
 }
 
 function applyFilters() {
+  if (!uploadedV || !rawVentas.length) return;
   const fIni = document.getElementById('fFechaInicio').value;
   const fFin = document.getElementById('fFechaFin').value;
   const fCiu = document.getElementById('fCiudad').value;
@@ -508,15 +622,17 @@ function applyFilters() {
   const fSeg = document.getElementById('fSegmento').value;
   const fPro = document.getElementById('fProducto').value;
   const fCan = document.getElementById('fCanal').value;
+  const fPag = document.getElementById('fMetodoPago').value;
 
   currentFiltered = rawVentas.filter(r => {
-    if (fIni && r.Fecha < fIni) return false;
-    if (fFin && r.Fecha > fFin) return false;
+    if (fIni && (!r.Fecha || r.Fecha < fIni)) return false;
+    if (fFin && (!r.Fecha || r.Fecha > fFin)) return false;
     if (fCiu && r.Ciudad !== fCiu) return false;
     if (fSuc && r.Sucursal !== fSuc) return false;
     if (fSeg && r.Segmento !== fSeg) return false;
     if (fPro && r.ProductoNombre !== fPro) return false;
     if (fCan && r.Canal !== fCan) return false;
+    if (fPag && r.MetodoPago !== fPag) return false;
     return true;
   });
 
@@ -526,7 +642,7 @@ function applyFilters() {
 function groupSum(rows, keyFn) {
   const acc = {};
   rows.forEach(r => {
-    const k = keyFn(r);
+    const k = keyFn(r) || 'Sin Dato';
     if (!acc[k]) acc[k] = { venta: 0, util: 0, tx: 0 };
     acc[k].venta += r.VentaNeta;
     acc[k].util += r.UtilidadBruta;
@@ -539,18 +655,24 @@ function updateDashboard(rows) {
   const totalVentas = rows.reduce((s, r) => s + r.VentaNeta, 0);
   const totalUtil = rows.reduce((s, r) => s + r.UtilidadBruta, 0);
   const totalTx = rows.reduce((s, r) => s + r.TxCount, 0);
-  const clientesUnicos = new Set(rows.map(r => r.ClienteID)).size;
+  const clientesUnicos = new Set(rows.map(r => r.ClienteID).filter(Boolean)).size;
   const margen = totalVentas > 0 ? (totalUtil / totalVentas) * 100 : 0;
   const ticket = totalTx > 0 ? totalVentas / totalTx : 0;
 
-  document.getElementById('kpiVentas').textContent = '$' + totalVentas.toLocaleString('en-US', { maximumFractionDigits: 0 });
-  document.getElementById('kpiUtilidad').textContent = '$' + totalUtil.toLocaleString('en-US', { maximumFractionDigits: 0 });
-  document.getElementById('kpiMargen').textContent = margen.toFixed(1) + '%';
-  document.getElementById('kpiTicket').textContent = '$' + ticket.toFixed(2);
-  document.getElementById('kpiClientes').textContent = clientesUnicos.toLocaleString('en-US');
-  document.getElementById('kpiTx').textContent = Math.round(totalTx).toLocaleString('en-US');
+  const setKpi = (id, text, colorClass) => {
+    const el = document.getElementById(id);
+    el.textContent = text;
+    el.className = `text-xl md:text-2xl font-extrabold ${colorClass} mt-1`;
+  };
 
-  const byMonth = groupSum(rows, r => r.Fecha.slice(0, 7));
+  setKpi('kpiVentas', '$' + totalVentas.toLocaleString('en-US', { maximumFractionDigits: 0 }), 'text-white');
+  setKpi('kpiUtilidad', '$' + totalUtil.toLocaleString('en-US', { maximumFractionDigits: 0 }), 'text-amber-300');
+  setKpi('kpiMargen', margen.toFixed(1) + '%', 'text-emerald-400');
+  setKpi('kpiTicket', '$' + ticket.toFixed(2), 'text-sky-300');
+  setKpi('kpiClientes', clientesUnicos.toLocaleString('en-US'), 'text-purple-300');
+  setKpi('kpiTx', Math.round(totalTx).toLocaleString('en-US'), 'text-rose-300');
+
+  const byMonth = groupSum(rows, r => r.Fecha ? r.Fecha.slice(0, 7) : 'Sin Fecha');
   const mLabels = Object.keys(byMonth).sort();
   renderChart('chartTendencia', 'line', mLabels, [
     { label: 'Ventas ($)', data: mLabels.map(m => byMonth[m].venta), borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,0.15)', fill: true, tension: 0.35 },
@@ -608,13 +730,12 @@ function renderChart(id, type, labels, datasets, extraOpts = {}) {
   });
 }
 
-// Construye un snapshot analítico profundo del estado actual del dashboard
 function getAnalyticsContext() {
   const rows = currentFiltered;
   const totalV = rows.reduce((s, r) => s + r.VentaNeta, 0);
   const totalU = rows.reduce((s, r) => s + r.UtilidadBruta, 0);
   const totalTx = rows.reduce((s, r) => s + r.TxCount, 0);
-  const clientes = new Set(rows.map(r => r.ClienteID)).size;
+  const clientes = new Set(rows.map(r => r.ClienteID).filter(Boolean)).size;
   const margen = totalV > 0 ? (totalU / totalV) * 100 : 0;
   const ticket = totalTx > 0 ? totalV / totalTx : 0;
   const freq = clientes > 0 ? totalTx / clientes : 0;
@@ -625,6 +746,7 @@ function getAnalyticsContext() {
   const cities = sortDesc(groupSum(rows, r => r.Ciudad));
   const segs = sortDesc(groupSum(rows, r => r.Segmento));
   const canals = sortDesc(groupSum(rows, r => r.Canal));
+  const payments = sortDesc(groupSum(rows, r => r.MetodoPago));
 
   const activeFilters = {
     fechaInicio: document.getElementById('fFechaInicio').value || 'Todas',
@@ -633,12 +755,13 @@ function getAnalyticsContext() {
     sucursal: document.getElementById('fSucursal').value || 'Todas',
     segmento: document.getElementById('fSegmento').value || 'Todos',
     producto: document.getElementById('fProducto').value || 'Todos',
-    canal: document.getElementById('fCanal').value || 'Todos'
+    canal: document.getElementById('fCanal').value || 'Todos',
+    metodoPago: document.getElementById('fMetodoPago').value || 'Todos'
   };
 
   return {
     totalV, totalU, totalTx, clientes, margen, ticket, freq,
-    prods, sucs, cities, segs, canals, activeFilters
+    prods, sucs, cities, segs, canals, payments, activeFilters
   };
 }
 
@@ -663,6 +786,7 @@ function appendMessage(role, htmlContent) {
 }
 
 function resetConversation(silentFilterChange = false) {
+  if (!uploadedV || !rawVentas.length) return;
   chatHistory = [];
   lastAiTopic = 'general';
   const box = document.getElementById('aiOutput');
@@ -675,13 +799,14 @@ function resetConversation(silentFilterChange = false) {
   }
 
   const topProd = ctx.prods[0];
-  const lowProd = ctx.prods[ctx.prods.length - 1];
   const topSuc = ctx.sucs[0];
   const lowSuc = ctx.sucs[ctx.sucs.length - 1];
   const topSeg = ctx.segs[0];
   const lowSeg = ctx.segs[ctx.segs.length - 1];
 
-  const brechaSuc = lowSuc && topSuc ? (((topSuc[1].venta - lowSuc[1].venta) / topSuc[1].venta) * 100).toFixed(1) : 0;
+  const brechaSuc = lowSuc && topSuc && topSuc[1].venta > 0
+    ? (((topSuc[1].venta - lowSuc[1].venta) / topSuc[1].venta) * 100).toFixed(1)
+    : '0.0';
 
   const intro = `
     Hola, soy <strong>Jhonny Crust</strong>. He auditado los <strong>${Math.round(ctx.totalTx).toLocaleString('en-US')} pedidos</strong> de esta selección ($${ctx.totalV.toLocaleString('en-US', {maximumFractionDigits:0})} en ventas y margen bruto de <strong>${ctx.margen.toFixed(1)}%</strong>):<br/><br/>
@@ -694,11 +819,11 @@ function resetConversation(silentFilterChange = false) {
 }
 
 function quickAsk(questionText) {
+  if (!uploadedV || !rawVentas.length) return;
   document.getElementById('aiQuestion').value = questionText;
   askAI();
 }
 
-// Motor local inteligente conversacional cuando no hay Gemini API Key configurada
 function generateLocalConsultantReply(q, ctx) {
   const ql = q.toLowerCase().trim();
   const topProd = ctx.prods[0];
@@ -710,12 +835,12 @@ function generateLocalConsultantReply(q, ctx) {
   const lowSeg = ctx.segs[ctx.segs.length - 1];
   const topCanal = ctx.canals[0];
   const lowCanal = ctx.canals[ctx.canals.length - 1];
+  const topPay = ctx.payments[0];
 
   const isGreeting = /^(hola|buenas|qué tal|que tal|hey|hi|alo|holi)(\s|$|!|\?|,)/i.test(ql) || ql.includes('hola jhony') || ql.includes('hola johnny');
   const isThanks = /(gracias|excelente|genial|perfecto|bacán|chévere|vale)/i.test(ql) && ql.length < 35;
   const isFollowUp = /(y por qué|por que|por qué|explícame más|explicame mas|profundiza|más detalle|mas detalle|y eso|y cómo|y como|qué más|que mas)/i.test(ql);
 
-  // 0A. Saludos o inicio de charla
   if (isGreeting) {
     lastAiTopic = 'general';
     return `¡Hola! Qué gusto saludarte. Aquí estoy, revisando los números de <strong>San Francisco Crust Pizza</strong> contigo.<br/><br/>
@@ -723,12 +848,10 @@ function generateLocalConsultantReply(q, ctx) {
     Hoy la atención está en <strong>${topSuc[0]}</strong> (nuestra sucursal más fuerte) frente a <strong>${lowSuc[0]}</strong> (donde hay más espacio para empujar). ¿Por dónde quieres que arranquemos: revisamos <em>problemas reales</em>, armamos <em>5 estrategias</em> o analizamos algún filtro en particular?`;
   }
 
-  // 0B. Agradecimientos / cierre amable
   if (isThanks) {
     return `¡A ti! Siempre que muevas un filtro o cargues un nuevo <code>.xlsx</code>, aquí sigo para contrastar hipótesis y tomar decisiones con datos en mano. ¿Revisamos algún otro ángulo del negocio o lo dejamos ahí por hoy?`;
   }
 
-  // Detectar tema actual o heredar el último tema si es pregunta de seguimiento
   let topic = lastAiTopic;
   if (ql.includes('estrategia') || ql.includes('plan') || ql.includes('idea') || ql.includes('recomienda') || ql.includes('hacer') || ql.includes('aumentar') || ql.includes('subir') || ql.includes('aplicar')) {
     topic = 'estrategias';
@@ -738,14 +861,13 @@ function generateLocalConsultantReply(q, ctx) {
     topic = 'sucursales';
   } else if (ql.includes('producto') || ql.includes('pizza') || ql.includes('menu') || ql.includes('menú') || ql.includes('ticket') || ql.includes('combo')) {
     topic = 'productos';
-  } else if (ql.includes('segmento') || ql.includes('cliente') || ql.includes('canal')) {
+  } else if (ql.includes('segmento') || ql.includes('cliente') || ql.includes('canal') || ql.includes('pago')) {
     topic = 'segmentos';
   } else if (!isFollowUp) {
     topic = 'general';
   }
   lastAiTopic = topic;
 
-  // 1. Estrategias
   if (topic === 'estrategias') {
     const prefix = isFollowUp
       ? `Bajando un nivel más sobre esas estrategias y cómo aterrizarlas en la operación:<br/><br/>`
@@ -758,10 +880,9 @@ function generateLocalConsultantReply(q, ctx) {
     <strong>5. Ingeniería de Menú y Rentabilidad:</strong> Tu margen bruto es del <strong>${ctx.margen.toFixed(1)}%</strong>. Revisa el costo unitario de los productos de baja rotación como <strong>${lowProd[0]}</strong>; si su margen individual está por debajo del 55%, reubícalo como complemento en combos o ajusta su porción/precio.`;
   }
 
-  // 2. Crítica / Problemas reales
   if (topic === 'critica') {
-    const prodShare = ((topProd[1].venta / ctx.totalV) * 100).toFixed(1);
-    const sucGap = (((topSuc[1].venta - lowSuc[1].venta) / topSuc[1].venta) * 100).toFixed(1);
+    const prodShare = ctx.totalV > 0 ? ((topProd[1].venta / ctx.totalV) * 100).toFixed(1) : '0.0';
+    const sucGap = lowSuc && topSuc && topSuc[1].venta > 0 ? (((topSuc[1].venta - lowSuc[1].venta) / topSuc[1].venta) * 100).toFixed(1) : '0.0';
     const introCrit = isFollowUp
       ? `Si profundizamos en por qué pasan estos desajustes en el día a día:<br/><br/>`
       : `Siendo 100% honesto y crítico con los datos de esta vista, veo <strong>3 problemas reales</strong> que deberías atender antes de meter más presupuesto a ciegas:<br/><br/>`;
@@ -771,14 +892,12 @@ function generateLocalConsultantReply(q, ctx) {
     • <strong>Techo en el Ticket Promedio ($${ctx.ticket.toFixed(2)}):</strong> Con ${ctx.clientes.toLocaleString('en-US')} clientes activos y ${Math.round(ctx.totalTx).toLocaleString('en-US')} órdenes, estás capturando volumen, pero falta venta cruzada (entradas/bebidas) en cada carrito para disparar la utilidad bruta sin gastar más en adquisición.`;
   }
 
-  // 3. Sucursales / Ciudades
   if (topic === 'sucursales') {
-    const rankingSuc = ctx.sucs.map((s, idx) => `${idx + 1}. <strong>${s[0]}</strong>: $${s[1].venta.toLocaleString('en-US', {maximumFractionDigits:0})} (Margen: ${((s[1].util / s[1].venta)*100).toFixed(1)}%)`).join('<br/>');
+    const rankingSuc = ctx.sucs.map((s, idx) => `${idx + 1}. <strong>${s[0]}</strong>: $${s[1].venta.toLocaleString('en-US', {maximumFractionDigits:0})} (Margen: ${s[1].venta > 0 ? ((s[1].util / s[1].venta)*100).toFixed(1) : '0.0'}%)`).join('<br/>');
     return `Así está el ranking real de tus sucursales en la selección actual:<br/><br/>${rankingSuc}<br/><br/>
     <strong>Mi lectura crítica:</strong> No repliques el mismo presupuesto de marketing en todas. Usa a <strong>${topSuc[0]}</strong> como laboratorio de rentabilidad (ticket y upselling) y enfoca campañas agresivas de tráfico en <strong>${lowSuc[0]}</strong> para nivelar el punto de equilibrio.`;
   }
 
-  // 4. Productos / Ticket
   if (topic === 'productos') {
     return `Analizando tu mix de productos sobre <strong>$${ctx.totalV.toLocaleString('en-US', {maximumFractionDigits:0})}</strong> en ventas:<br/><br/>
     • <strong>Líderes:</strong> <strong>${topProd[0]}</strong> ($${topProd[1].venta.toLocaleString('en-US', {maximumFractionDigits:0})}) y <strong>${secondProd[0]}</strong> ($${secondProd[1].venta.toLocaleString('en-US', {maximumFractionDigits:0})}) son tus locomotoras.<br/>
@@ -786,22 +905,23 @@ function generateLocalConsultantReply(q, ctx) {
     <strong>Decisión recomendada:</strong> Para mover el ticket promedio de <strong>$${ctx.ticket.toFixed(2)}</strong> hacia arriba, configura en caja y en apps de <em>${topCanal[0]}</em> una sugerencia automática de acompañamiento al elegir <strong>${topProd[0]}</strong>.`;
   }
 
-  // 5. Segmentos / Canales
   if (topic === 'segmentos') {
     const segList = ctx.segs.map(s => `• <strong>${s[0]}</strong>: $${s[1].venta.toLocaleString('en-US', {maximumFractionDigits:0})}`).join('<br/>');
     const canList = ctx.canals.map(c => `• <strong>${c[0]}</strong>: $${c[1].venta.toLocaleString('en-US', {maximumFractionDigits:0})}`).join('<br/>');
-    return `Así se reparte la demanda por <strong>segmento</strong> y <strong>canal</strong> en tu filtro actual:<br/><br/>
+    const payList = ctx.payments.map(p => `• <strong>${p[0]}</strong>: $${p[1].venta.toLocaleString('en-US', {maximumFractionDigits:0})}`).join('<br/>');
+    return `Así se reparte la demanda por <strong>segmento</strong>, <strong>canal</strong> y <strong>método de pago</strong> en tu filtro actual:<br/><br/>
     <strong>Segmentos:</strong><br/>${segList}<br/><br/>
     <strong>Canales:</strong><br/>${canList}<br/><br/>
-    <strong>Lectura crítica:</strong> El segmento <strong>${topSeg[0]}</strong> y el canal <strong>${topCanal[0]}</strong> son tu base principal; si logras activar compras repetidas en <strong>${lowSeg[0]}</strong> dentro de <strong>${lowCanal[0]}</strong>, ganas volumen incremental sin saturar tu canal principal.`;
+    <strong>Métodos de pago:</strong><br/>${payList}<br/><br/>
+    <strong>Lectura crítica:</strong> El segmento <strong>${topSeg[0]}</strong>, el canal <strong>${topCanal[0]}</strong> y el pago con <strong>${topPay ? topPay[0] : 'N/A'}</strong> lideran la operación; si logras activar compras repetidas en <strong>${lowSeg[0]}</strong> dentro de <strong>${lowCanal[0]}</strong>, ganas volumen incremental.`;
   }
 
-  // 6. Conversación general si escribe otra cosa distinta
   return `Entiendo el punto: <em>"${q}"</em>. Viendo la foto completa de esta selección (<strong>$${ctx.totalV.toLocaleString('en-US', {maximumFractionDigits:0})}</strong> en ventas, <strong>${ctx.margen.toFixed(1)}%</strong> de margen y ticket de <strong>$${ctx.ticket.toFixed(2)}</strong>), lo más relevante ahora mismo es la diferencia entre <strong>${topSuc[0]}</strong> y <strong>${lowSuc[0]}</strong>, y el peso de <strong>${topProd[0]}</strong>.<br/><br/>
   ¿Quieres que lo bajemos a <strong>5 estrategias</strong>, que hagamos una <strong>crítica de debilidades</strong> o que revisemos <strong>sucursales y productos</strong>?`;
 }
 
 async function askAI() {
+  if (!uploadedV || !rawVentas.length) return;
   const input = document.getElementById('aiQuestion');
   const q = input.value.trim();
   if (!q) return;
@@ -816,7 +936,6 @@ async function askAI() {
     return;
   }
 
-  // Si hay Gemini API Key configurada, llamamos a Gemini en tiempo real
   if (geminiApiKey) {
     const btn = document.getElementById('btnSendAI');
     btn.disabled = true;
@@ -832,9 +951,10 @@ Usa los datos exactos del dashboard filtrado actualmente por el usuario:
 - Ticket Promedio: $${ctx.ticket.toFixed(2)} USD
 - Clientes únicos: ${ctx.clientes} | Transacciones: ${Math.round(ctx.totalTx)} | Frecuencia promedio: ${ctx.freq.toFixed(2)} compras/cliente
 - Ranking Productos (Top): ${ctx.prods.slice(0, 6).map(p => `${p[0]} ($${p[1].venta.toFixed(0)})`).join(', ')}
-- Ranking Sucursales: ${ctx.sucs.map(s => `${s[0]} ($${s[1].venta.toFixed(0)}, margen ${((s[1].util/s[1].venta)*100).toFixed(1)}%)`).join(', ')}
+- Ranking Sucursales: ${ctx.sucs.map(s => `${s[0]} ($${s[1].venta.toFixed(0)}, margen ${s[1].venta > 0 ? ((s[1].util/s[1].venta)*100).toFixed(1) : '0.0'}%)`).join(', ')}
 - Ranking Segmentos: ${ctx.segs.map(s => `${s[0]} ($${s[1].venta.toFixed(0)})`).join(', ')}
 - Ranking Canales: ${ctx.canals.map(c => `${c[0]} ($${c[1].venta.toFixed(0)})`).join(', ')}
+- Ranking Métodos de pago: ${ctx.payments.map(p => `${p[0]} ($${p[1].venta.toFixed(0)})`).join(', ')}
 
 Responde en español, con estructura clara, números concretos y sentido crítico.`;
 
@@ -872,16 +992,12 @@ Responde en español, con estructura clara, números concretos y sentido crític
     return;
   }
 
-  // Modo local conversacional
   const reply = generateLocalConsultantReply(q, ctx);
   appendMessage('assistant', reply);
   chatHistory.push({ role: 'assistant', content: reply });
 }
 
-updateApiBadge();
-seedInitialData();
-populateFilterOptions();
-applyFilters();
+renderEmptyState();
 </script>
 </body>
 </html>
