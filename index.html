@@ -45,6 +45,9 @@
     .glass-input:focus {
       border-color: #f59e0b;
     }
+    /* Scrollbar sutil para el chat de Jhonny Crust */
+    #aiOutput::-webkit-scrollbar { width: 5px; }
+    #aiOutput::-webkit-scrollbar-thumb { background: rgba(251, 191, 36, 0.35); border-radius: 999px; }
   </style>
 </head>
 <body class="p-4 md:p-6">
@@ -64,13 +67,11 @@
     </div>
 
     <div class="flex flex-wrap items-center gap-2.5">
-      <!-- Botón principal carga múltiple (1 o las 3 bases a la vez) -->
       <label class="cursor-pointer px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-bold text-xs flex items-center gap-2 shadow-lg shadow-amber-500/20 transition">
         <span>📂 Cargar archivos</span>
         <input type="file" id="fileMultiple" accept=".xlsx,.xls" multiple class="hidden" />
       </label>
 
-      <!-- Botones individuales -->
       <label class="cursor-pointer glass-input hover:border-amber-400 flex items-center gap-2 text-xs font-semibold" title="Reemplazar solo Ventas">
         <span>📄 Ventas (.xlsx)</span>
         <input type="file" id="fileVentas" accept=".xlsx,.xls" class="hidden" />
@@ -135,7 +136,7 @@
     </div>
   </section>
 
-  <!-- BENTO GRID KPIs (6 INDICADORES PRINCIPALES) -->
+  <!-- BENTO GRID KPIs -->
   <section class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
     <div class="glass-card p-4">
       <span class="text-xs text-slate-400">Ventas Totales</span>
@@ -172,35 +173,73 @@
   <!-- BENTO GRID GRÁFICOS + JHONNY CRUST -->
   <section class="grid grid-cols-1 lg:grid-cols-12 gap-5">
     
-    <!-- Evolución Temporal (7 cols) -->
-    <div class="glass-card p-5 lg:col-span-7">
+    <!-- Evolución Temporal (6 cols) -->
+    <div class="glass-card p-5 lg:col-span-6 flex flex-col justify-between">
       <h2 class="text-sm font-bold text-slate-200 mb-3">Evolución de Ventas y Utilidad Bruta</h2>
-      <div class="h-64"><canvas id="chartTendencia"></canvas></div>
+      <div class="h-80"><canvas id="chartTendencia"></canvas></div>
     </div>
 
-    <!-- Jhonny Crust — Asistente Comercial IA (5 cols) -->
-    <div class="glass-card p-5 lg:col-span-5 flex flex-col justify-between border-amber-400/30">
+    <!-- Jhonny Crust — Consultor Estratégico IA Conversacional (6 cols) -->
+    <div class="glass-card p-5 lg:col-span-6 flex flex-col justify-between border-amber-400/35">
       <div>
-        <div class="flex items-center justify-between mb-3">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3 pb-2.5 border-b border-white/10">
           <div class="flex items-center gap-2.5">
             <div class="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 via-orange-500 to-rose-500 flex items-center justify-center text-base shadow-md">
               🧑‍🍳
             </div>
             <div>
-              <h2 class="text-sm font-extrabold text-amber-300 leading-tight">Jhonny Crust</h2>
-              <p class="text-[11px] text-slate-400">Asistente Comercial IA • Estratega de Crecimiento</p>
+              <div class="flex items-center gap-2">
+                <h2 class="text-sm font-extrabold text-amber-300 leading-tight">Jhonny Crust</h2>
+                <span id="aiModeBadge" class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+                  Motor Analítico Activo
+                </span>
+              </div>
+              <p class="text-[11px] text-slate-400">Director Comercial IA • Crítico de Rentabilidad y Estrategia</p>
             </div>
           </div>
-          <button onclick="generateAIInsights()" class="px-3 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-xs font-semibold transition">
-            Nuevo Análisis
+
+          <div class="flex items-center gap-1.5">
+            <button onclick="toggleApiKeyBox()" class="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-slate-200 text-[11px] font-semibold transition" title="Conectar Gemini API para IA generativa libre">
+              ⚙️ API IA
+            </button>
+            <button onclick="resetConversation()" class="px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-[11px] font-semibold transition">
+              Nuevo Diagnóstico
+            </button>
+          </div>
+        </div>
+
+        <!-- Caja opcional para API Key de Gemini -->
+        <div id="apiKeyBox" class="hidden mb-3 p-2.5 rounded-xl bg-slate-950/80 border border-amber-400/30 text-xs">
+          <p class="text-[11px] text-slate-300 mb-1.5">
+            Pega tu <b>Gemini API Key</b> (gratis en <i>aistudio.google.com</i>) para habilitar conversación 100% generativa. Si lo dejas vacío, Jhonny usará su motor analítico local:
+          </p>
+          <div class="flex gap-2">
+            <input id="geminiKeyInput" type="password" placeholder="AIzaSy..." class="glass-input flex-1 text-xs" />
+            <button onclick="saveApiKey()" class="px-3 py-1 rounded-lg bg-amber-500 text-slate-950 font-bold text-xs">Guardar</button>
+          </div>
+        </div>
+
+        <!-- Chips de preguntas rápidas -->
+        <div class="flex flex-wrap gap-1.5 mb-2.5">
+          <button onclick="quickAsk('Dame 5 estrategias accionables para aumentar las ventas y el margen según estos datos')" class="text-[11px] px-2.5 py-1 rounded-lg bg-white/5 hover:bg-amber-500/20 hover:text-amber-200 border border-white/10 transition">
+            💡 Dame 5 estrategias
+          </button>
+          <button onclick="quickAsk('Hazme una crítica honesta: ¿dónde estamos perdiendo dinero o eficiencia?')" class="text-[11px] px-2.5 py-1 rounded-lg bg-white/5 hover:bg-amber-500/20 hover:text-amber-200 border border-white/10 transition">
+            🔍 Crítica de debilidades
+          </button>
+          <button onclick="quickAsk('¿Cómo subo el ticket promedio y qué combos recomiendas?')" class="text-[11px] px-2.5 py-1 rounded-lg bg-white/5 hover:bg-amber-500/20 hover:text-amber-200 border border-white/10 transition">
+            📈 Subir ticket promedio
           </button>
         </div>
-        <div id="aiOutput" class="space-y-2.5 text-xs text-slate-200 leading-relaxed max-h-56 overflow-y-auto pr-1"></div>
+
+        <!-- Historial de conversación -->
+        <div id="aiOutput" class="space-y-3 text-xs text-slate-200 leading-relaxed h-64 overflow-y-auto pr-1.5"></div>
       </div>
-      <div class="mt-3 pt-3 border-t border-white/10 flex gap-2">
-        <input id="aiQuestion" type="text" placeholder="Pregúntale a Jhonny Crust sobre tus ventas..." class="glass-input flex-1 text-xs" onkeydown="if(event.key==='Enter') askAI()" />
-        <button onclick="askAI()" class="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-bold text-xs">
-          Consultar
+
+      <div class="mt-3 pt-2.5 border-t border-white/10 flex gap-2">
+        <input id="aiQuestion" type="text" placeholder="Conversa con Jhonny Crust (ej: Dame 5 estrategias para aplicar hoy)..." class="glass-input flex-1 text-xs" onkeydown="if(event.key==='Enter') askAI()" />
+        <button id="btnSendAI" onclick="askAI()" class="px-4 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-bold text-xs transition">
+          Enviar
         </button>
       </div>
     </div>
@@ -236,6 +275,39 @@ let rawVentas = [];
 let mapClientes = {};
 let mapProductos = {};
 let charts = {};
+let currentFiltered = [];
+let chatHistory = [];
+let geminiApiKey = localStorage.getItem('jhonny_gemini_key') || '';
+
+function updateApiBadge() {
+  const badge = document.getElementById('aiModeBadge');
+  if (geminiApiKey) {
+    badge.textContent = '✨ Gemini IA Conectado';
+    badge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/40';
+    document.getElementById('geminiKeyInput').value = geminiApiKey;
+  } else {
+    badge.textContent = '🧠 Motor Analítico Local';
+    badge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30';
+  }
+}
+
+function toggleApiKeyBox() {
+  document.getElementById('apiKeyBox').classList.toggle('hidden');
+}
+
+function saveApiKey() {
+  geminiApiKey = document.getElementById('geminiKeyInput').value.trim();
+  if (geminiApiKey) {
+    localStorage.setItem('jhonny_gemini_key', geminiApiKey);
+  } else {
+    localStorage.removeItem('jhonny_gemini_key');
+  }
+  updateApiBadge();
+  document.getElementById('apiKeyBox').classList.add('hidden');
+  appendMessage('assistant', geminiApiKey
+    ? '¡Listo! Ya tengo conexión directa con Gemini IA. Pregúntame lo que necesites sobre tus números, estrategias o puntos ciegos del negocio.'
+    : 'Clave eliminada. Sigo operando con mi motor analítico local sobre tus indicadores en vivo.');
+}
 
 function seedInitialData() {
   const ciudades = {
@@ -313,17 +385,14 @@ async function readWorkbook(file) {
 
 let uploadedV = null, uploadedC = null, uploadedP = null;
 
-// Carga múltiple inteligente (1, 2 o las 3 bases juntas)
 document.getElementById('fileMultiple').addEventListener('change', async (e) => {
   const files = Array.from(e.target.files || []);
   if (!files.length) return;
-
   for (const file of files) {
     const rows = await readWorkbook(file);
     if (!rows.length) continue;
     const cols = Object.keys(rows[0]).map(c => c.toLowerCase());
     const fname = file.name.toLowerCase();
-
     if (cols.includes('ventaid') || cols.includes('ventaneta') || fname.includes('venta')) {
       uploadedV = rows;
       document.getElementById('badgeVentas').textContent = '✓';
@@ -339,7 +408,6 @@ document.getElementById('fileMultiple').addEventListener('change', async (e) => 
   e.target.value = '';
 });
 
-// Carga individual
 document.getElementById('fileVentas').addEventListener('change', async (e) => {
   if (!e.target.files[0]) return;
   uploadedV = await readWorkbook(e.target.files[0]);
@@ -431,8 +499,6 @@ function resetFilters() {
   applyFilters();
 }
 
-let currentFiltered = [];
-
 function applyFilters() {
   const fIni = document.getElementById('fFechaInicio').value;
   const fFin = document.getElementById('fFechaFin').value;
@@ -460,9 +526,10 @@ function groupSum(rows, keyFn) {
   const acc = {};
   rows.forEach(r => {
     const k = keyFn(r);
-    if (!acc[k]) acc[k] = { venta: 0, util: 0 };
+    if (!acc[k]) acc[k] = { venta: 0, util: 0, tx: 0 };
     acc[k].venta += r.VentaNeta;
     acc[k].util += r.UtilidadBruta;
+    acc[k].tx += r.TxCount;
   });
   return acc;
 }
@@ -482,7 +549,6 @@ function updateDashboard(rows) {
   document.getElementById('kpiClientes').textContent = clientesUnicos.toLocaleString('en-US');
   document.getElementById('kpiTx').textContent = Math.round(totalTx).toLocaleString('en-US');
 
-  // Tendencia mensual
   const byMonth = groupSum(rows, r => r.Fecha.slice(0, 7));
   const mLabels = Object.keys(byMonth).sort();
   renderChart('chartTendencia', 'line', mLabels, [
@@ -490,14 +556,12 @@ function updateDashboard(rows) {
     { label: 'Utilidad ($)', data: mLabels.map(m => byMonth[m].util), borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.1)', fill: true, tension: 0.35 }
   ]);
 
-  // Top 10 Productos
   const byProd = groupSum(rows, r => r.ProductoNombre);
   const pSorted = Object.entries(byProd).sort((a, b) => b[1].venta - a[1].venta).slice(0, 10);
   renderChart('chartProductos', 'bar', pSorted.map(x => x[0]), [
     { label: 'Ventas ($)', data: pSorted.map(x => x[1].venta), backgroundColor: '#fb7185', borderRadius: 6 }
   ], { indexAxis: 'y' });
 
-  // Sucursales
   const bySuc = groupSum(rows, r => r.Sucursal);
   const sSorted = Object.entries(bySuc).sort((a, b) => b[1].venta - a[1].venta);
   renderChart('chartSucursal', 'bar', sSorted.map(x => x[0]), [
@@ -505,7 +569,6 @@ function updateDashboard(rows) {
     { label: 'Utilidad ($)', data: sSorted.map(x => x[1].util), backgroundColor: '#34d399', borderRadius: 6 }
   ]);
 
-  // Ciudad
   const byCity = groupSum(rows, r => r.Ciudad);
   const cKeys = Object.keys(byCity);
   renderChart('chartCiudad', 'doughnut', cKeys, [{
@@ -514,7 +577,6 @@ function updateDashboard(rows) {
     borderWidth: 0
   }]);
 
-  // Segmento
   const bySeg = groupSum(rows, r => r.Segmento);
   const segKeys = Object.keys(bySeg);
   renderChart('chartSegmento', 'bar', segKeys, [{
@@ -524,7 +586,7 @@ function updateDashboard(rows) {
     borderRadius: 8
   }]);
 
-  generateAIInsights();
+  resetConversation(true);
 }
 
 function renderChart(id, type, labels, datasets, extraOpts = {}) {
@@ -545,56 +607,227 @@ function renderChart(id, type, labels, datasets, extraOpts = {}) {
   });
 }
 
-function generateAIInsights() {
+// Construye un snapshot analítico profundo del estado actual del dashboard
+function getAnalyticsContext() {
   const rows = currentFiltered;
-  if (!rows.length) {
-    document.getElementById('aiOutput').innerHTML = '<p class="text-rose-300">Hola, soy <b>Jhonny Crust</b>. No encuentro ventas con los filtros actuales; prueba ampliando el rango de fechas o limpiando algún filtro.</p>';
+  const totalV = rows.reduce((s, r) => s + r.VentaNeta, 0);
+  const totalU = rows.reduce((s, r) => s + r.UtilidadBruta, 0);
+  const totalTx = rows.reduce((s, r) => s + r.TxCount, 0);
+  const clientes = new Set(rows.map(r => r.ClienteID)).size;
+  const margen = totalV > 0 ? (totalU / totalV) * 100 : 0;
+  const ticket = totalTx > 0 ? totalV / totalTx : 0;
+  const freq = clientes > 0 ? totalTx / clientes : 0;
+
+  const sortDesc = (obj) => Object.entries(obj).sort((a, b) => b[1].venta - a[1].venta);
+  const prods = sortDesc(groupSum(rows, r => r.ProductoNombre));
+  const sucs = sortDesc(groupSum(rows, r => r.Sucursal));
+  const cities = sortDesc(groupSum(rows, r => r.Ciudad));
+  const segs = sortDesc(groupSum(rows, r => r.Segmento));
+  const canals = sortDesc(groupSum(rows, r => r.Canal));
+
+  const activeFilters = {
+    fechaInicio: document.getElementById('fFechaInicio').value || 'Todas',
+    fechaFin: document.getElementById('fFechaFin').value || 'Todas',
+    ciudad: document.getElementById('fCiudad').value || 'Todas',
+    sucursal: document.getElementById('fSucursal').value || 'Todas',
+    segmento: document.getElementById('fSegmento').value || 'Todos',
+    producto: document.getElementById('fProducto').value || 'Todos',
+    canal: document.getElementById('fCanal').value || 'Todos'
+  };
+
+  return {
+    totalV, totalU, totalTx, clientes, margen, ticket, freq,
+    prods, sucs, cities, segs, canals, activeFilters
+  };
+}
+
+function formatHTML(text) {
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '<strong class="text-amber-300">$1</strong>')
+    .replace(/\n/g, '<br/>');
+}
+
+function appendMessage(role, htmlContent) {
+  const box = document.getElementById('aiOutput');
+  const div = document.createElement('div');
+  if (role === 'user') {
+    div.className = 'p-2.5 rounded-xl bg-amber-500/20 border border-amber-400/35 text-amber-50 ml-6';
+    div.innerHTML = `<div class="text-[10px] uppercase tracking-wider text-amber-300 font-bold mb-0.5">Tú</div>${htmlContent}`;
+  } else {
+    div.className = 'p-3 rounded-xl bg-white/5 border border-white/10 text-slate-200 mr-2';
+    div.innerHTML = `<div class="text-[10px] uppercase tracking-wider text-sky-300 font-bold mb-1">🧑‍🍳 Jhonny Crust</div>${htmlContent}`;
+  }
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+}
+
+function resetConversation(silentFilterChange = false) {
+  chatHistory = [];
+  const box = document.getElementById('aiOutput');
+  box.innerHTML = '';
+
+  const ctx = getAnalyticsContext();
+  if (!ctx.totalTx) {
+    appendMessage('assistant', 'No hay registros con los filtros actuales. Ajusta las fechas o limpia algún filtro para que podamos analizar los números.');
     return;
   }
-  const totalV = rows.reduce((s, r) => s + r.VentaNeta, 0);
-  const totalU = rows.reduce((s, r) => s + r.UtilidadBruta, 0);
-  const margen = ((totalU / totalV) * 100).toFixed(1);
 
-  const topProd = Object.entries(groupSum(rows, r => r.ProductoNombre)).sort((a, b) => b[1].venta - a[1].venta)[0];
-  const topSuc = Object.entries(groupSum(rows, r => r.Sucursal)).sort((a, b) => b[1].venta - a[1].venta)[0];
-  const lowSuc = Object.entries(groupSum(rows, r => r.Sucursal)).sort((a, b) => a[1].venta - b[1].venta)[0];
-  const topSeg = Object.entries(groupSum(rows, r => r.Segmento)).sort((a, b) => b[1].venta - a[1].venta)[0];
+  const topProd = ctx.prods[0];
+  const lowProd = ctx.prods[ctx.prods.length - 1];
+  const topSuc = ctx.sucs[0];
+  const lowSuc = ctx.sucs[ctx.sucs.length - 1];
+  const topSeg = ctx.segs[0];
+  const lowSeg = ctx.segs[ctx.segs.length - 1];
 
-  document.getElementById('aiOutput').innerHTML = `
-    <div class="p-2.5 rounded-xl bg-white/5 border border-white/10">
-      <strong class="text-amber-300">🍕 Diagnóstico de Jhonny Crust — Producto Estrella:</strong> <b>${topProd[0]}</b> lidera con $${topProd[1].venta.toLocaleString('en-US', {maximumFractionDigits:0})}. Te sugiero empaquetarlo con <i>Cheese Bread</i> o bebidas para subir el ticket promedio.
-    </div>
-    <div class="p-2.5 rounded-xl bg-white/5 border border-white/10">
-      <strong class="text-sky-300">📍 Oportunidad por Sucursal:</strong> <b>${topSuc[0]}</b> marca el ritmo de ingresos, mientras que <b>${lowSuc[0]}</b> tiene margen para crecer con promociones locales en horas valle.
-    </div>
-    <div class="p-2.5 rounded-xl bg-white/5 border border-white/10">
-      <strong class="text-emerald-300">🎯 Estrategia Comercial (${margen}% Margen):</strong> El segmento <b>${topSeg[0]}</b> concentra la mayor demanda. Activa campañas de recompra y fidelización enfocadas en este grupo.
-    </div>
+  const brechaSuc = lowSuc && topSuc ? (((topSuc[1].venta - lowSuc[1].venta) / topSuc[1].venta) * 100).toFixed(1) : 0;
+
+  const intro = `
+    Hola, soy <strong>Jhonny Crust</strong>. He auditado los <strong>${Math.round(ctx.totalTx).toLocaleString('en-US')} pedidos</strong> de esta selección ($${ctx.totalV.toLocaleString('en-US', {maximumFractionDigits:0})} en ventas y margen bruto de <strong>${ctx.margen.toFixed(1)}%</strong>):<br/><br/>
+    • <strong>Lo que sostiene el negocio:</strong> <strong>${topProd[0]}</strong> lidera ingresos ($${topProd[1].venta.toLocaleString('en-US', {maximumFractionDigits:0})}) y el segmento <strong>${topSeg[0]}</strong> encabeza el consumo.<br/>
+    • <strong>Punto crítico a vigilar:</strong> Hay una brecha del <strong>${brechaSuc}%</strong> entre tu mejor sucursal (<strong>${topSuc[0]}</strong>) y la más rezagada (<strong>${lowSuc[0]}</strong>), y el segmento <strong>${lowSeg[0]}</strong> está sub-explotado.<br/><br/>
+    ¿Sobre qué quieres que profundicemos? Pídeme <em>"5 estrategias accionables"</em>, un <em>"análisis crítico de sucursales"</em> o pregúntame cualquier duda comercial.
   `;
+  appendMessage('assistant', intro);
+  chatHistory.push({ role: 'assistant', content: intro });
 }
 
-function askAI() {
-  const q = document.getElementById('aiQuestion').value.trim();
+function quickAsk(questionText) {
+  document.getElementById('aiQuestion').value = questionText;
+  askAI();
+}
+
+// Motor local inteligente cuando no hay Gemini API Key configurada
+function generateLocalConsultantReply(q, ctx) {
+  const ql = q.toLowerCase();
+  const topProd = ctx.prods[0];
+  const secondProd = ctx.prods[1] || topProd;
+  const lowProd = ctx.prods[ctx.prods.length - 1];
+  const topSuc = ctx.sucs[0];
+  const lowSuc = ctx.sucs[ctx.sucs.length - 1];
+  const topSeg = ctx.segs[0];
+  const lowSeg = ctx.segs[ctx.segs.length - 1];
+  const topCanal = ctx.canals[0];
+  const lowCanal = ctx.canals[ctx.canals.length - 1];
+
+  // 1. Si pide estrategias / plan de acción / ideas
+  if (ql.includes('estrategia') || ql.includes('plan') || ql.includes('idea') || ql.includes('recomienda') || ql.includes('hacer') || ql.includes('aumentar') || ql.includes('subir')) {
+    return `Aquí tienes <strong>5 estrategias concretas</strong> basadas directamente en los indicadores que tienes filtrados hoy (Ticket promedio: <strong>$${ctx.ticket.toFixed(2)}</strong> | Margen: <strong>${ctx.margen.toFixed(1)}%</strong>):<br/><br/>
+    <strong>1. Bundle de Anclaje sobre "${topProd[0]}":</strong> Como es tu producto de mayor tracción ($${topProd[1].venta.toLocaleString('en-US', {maximumFractionDigits:0})}), crea un combo "Dúo Crust" sumando <em>${lowProd[0]}</em> o bebidas con un descuento del 10%. Objetivo: subir tu ticket promedio de $${ctx.ticket.toFixed(2)} a <strong>$${(ctx.ticket * 1.14).toFixed(2)}</strong> sin sacrificar margen.<br/><br/>
+    <strong>2. Plan de Rescate en "${lowSuc[0]}":</strong> Es tu sucursal con menor facturación frente a <strong>${topSuc[0]}</strong>. Aplica geolocalización en pauta local (radio de 3 km) en horarios valle (martes a jueves de 14:00 a 17:00) con entrega gratis en pedidos mayores a $${Math.round(ctx.ticket)}.<br/><br/>
+    <strong>3. Activación del Segmento "${lowSeg[0]}":</strong> Es el grupo que menos aporta actualmente frente a <strong>${topSeg[0]}</strong>. Diseña una oferta específica para este perfil (ej. paquetes ejecutivos o suscripción mensual recurrente) para elevar la frecuencia de compra actual (<strong>${ctx.freq.toFixed(1)} pedidos/cliente</strong>).<br/><br/>
+    <strong>4. Optimización del Canal "${lowCanal[0]}":</strong> Actualmente <strong>${topCanal[0]}</strong> concentra la demanda. Incentiva el canal <strong>${lowCanal[0]}</strong> con un beneficio de bajo costo (ej. postre o entrada gratis en el siguiente pedido) para reducir la dependencia de un solo canal y mejorar tiempos operativos.<br/><br/>
+    <strong>5. Ingeniería de Menú y Rentabilidad:</strong> Tu margen bruto es del <strong>${ctx.margen.toFixed(1)}%</strong>. Revisa el costo unitario de los productos de baja rotación como <strong>${lowProd[0]}</strong>; si su margen individual está por debajo del 55%, reubícalo como complemento en combos o ajusta su porción/precio.`;
+  }
+
+  // 2. Si pide crítica / problemas / debilidades / riesgos
+  if (ql.includes('critic') || ql.includes('crític') || ql.includes('mal') || ql.includes('problema') || ql.includes('debilidad') || ql.includes('perdiendo') || ql.includes('riesgo')) {
+    const prodShare = ((topProd[1].venta / ctx.totalV) * 100).toFixed(1);
+    const sucGap = (((topSuc[1].venta - lowSuc[1].venta) / topSuc[1].venta) * 100).toFixed(1);
+    return `Siendo 100% honesto y crítico con los datos de esta vista, veo <strong>3 focos rojos</strong> que deberías atender antes de expandir gastos:<br/><br/>
+    • <strong>Desbalance entre sucursales (${sucGap}% de brecha):</strong> <strong>${topSuc[0]}</strong> ($${topSuc[1].venta.toLocaleString('en-US', {maximumFractionDigits:0})}) está cargando con el resultado mientras <strong>${lowSuc[0]}</strong> ($${lowSuc[1].venta.toLocaleString('en-US', {maximumFractionDigits:0})}) rinde muy por debajo. Hay que auditar tiempos de preparación, servicio o cobertura en esa zona.<br/>
+    • <strong>Concentración de ingresos:</strong> <strong>${topProd[0]}</strong> representa el <strong>${prodShare}%</strong> de las ventas totales. Depender tanto de un solo ítem te vuelve vulnerable si sube el costo de sus insumos.<br/>
+    • <strong>Techo en el Ticket Promedio ($${ctx.ticket.toFixed(2)}):</strong> Con ${ctx.clientes.toLocaleString('en-US')} clientes activos y ${Math.round(ctx.totalTx).toLocaleString('en-US')} órdenes, estás capturando volumen, pero falta venta cruzada (entradas/bebidas) en cada carrito para disparar la utilidad bruta sin gastar más en adquisición.`;
+  }
+
+  // 3. Si pregunta por sucursales o ciudades
+  if (ql.includes('sucursal') || ql.includes('ciudad') || ql.includes('local') || ql.includes('tienda')) {
+    const rankingSuc = ctx.sucs.map((s, idx) => `${idx + 1}. <strong>${s[0]}</strong>: $${s[1].venta.toLocaleString('en-US', {maximumFractionDigits:0})} (Margen: ${((s[1].util / s[1].venta)*100).toFixed(1)}%)`).join('<br/>');
+    return `Así está el ranking real de tus sucursales en la selección actual:<br/><br/>${rankingSuc}<br/><br/>
+    <strong>Mi lectura crítica:</strong> No repliques el mismo presupuesto de marketing en todas. Usa a <strong>${topSuc[0]}</strong> como laboratorio de rentabilidad (ticket y upselling) y enfoca campañas agresivas de tráfico en <strong>${lowSuc[0]}</strong> para nivelar el punto de equilibrio.`;
+  }
+
+  // 4. Si pregunta por productos / menú / ticket
+  if (ql.includes('producto') || ql.includes('pizza') || ql.includes('menu') || ql.includes('menú') || ql.includes('ticket') || ql.includes('combo')) {
+    return `Analizando tu mix de productos sobre <strong>$${ctx.totalV.toLocaleString('en-US', {maximumFractionDigits:0})}</strong> en ventas:<br/><br/>
+    • <strong>Líderes:</strong> <strong>${topProd[0]}</strong> ($${topProd[1].venta.toLocaleString('en-US', {maximumFractionDigits:0})}) y <strong>${secondProd[0]}</strong> ($${secondProd[1].venta.toLocaleString('en-US', {maximumFractionDigits:0})}) son tus locomotoras.<br/>
+    • <strong>Rezago:</strong> <strong>${lowProd[0]}</strong> ($${lowProd[1].venta.toLocaleString('en-US', {maximumFractionDigits:0})}) tiene muy baja salida.<br/><br/>
+    <strong>Decisión recomendada:</strong> Para mover el ticket promedio de <strong>$${ctx.ticket.toFixed(2)}</strong> hacia arriba, configura en caja y en apps de <em>${topCanal[0]}</em> una sugerencia automática de acompañamiento al elegir <strong>${topProd[0]}</strong>.`;
+  }
+
+  // 5. Respuesta conversacional general adaptada a la pregunta
+  return `Sobre tu pregunta <em>"${q}"</em>, cruzando los indicadores actuales (<strong>$${ctx.totalV.toLocaleString('en-US', {maximumFractionDigits:0})}</strong> en ventas, utilidad de <strong>$${ctx.totalU.toLocaleString('en-US', {maximumFractionDigits:0})}</strong> y margen del <strong>${ctx.margen.toFixed(1)}%</strong>):<br/><br/>
+  Tu mayor palanca inmediata está en replicar el comportamiento de compra del segmento <strong>${topSeg[0]}</strong> dentro de la sucursal <strong>${lowSuc[0]}</strong>, impulsando combos alrededor de <strong>${topProd[0]}</strong> en el canal <strong>${topCanal[0]}</strong>.<br/><br/>
+  Si quieres que bajemos esto a un plan paso a paso, dime: ¿prefieres que nos enfoquemos en <strong>rentabilidad por producto</strong>, <strong>recuperar sucursales bajas</strong> o <strong>fidelizar clientes</strong>?`;
+}
+
+async function askAI() {
+  const input = document.getElementById('aiQuestion');
+  const q = input.value.trim();
   if (!q) return;
-  const rows = currentFiltered;
-  if (!rows.length) return;
 
-  const topProd = Object.entries(groupSum(rows, r => r.ProductoNombre)).sort((a, b) => b[1].venta - a[1].venta)[0];
-  const topSuc = Object.entries(groupSum(rows, r => r.Sucursal)).sort((a, b) => b[1].venta - a[1].venta)[0];
-  const topCanal = Object.entries(groupSum(rows, r => r.Canal)).sort((a, b) => b[1].venta - a[1].venta)[0];
-  const totalV = rows.reduce((s, r) => s + r.VentaNeta, 0);
-  const totalU = rows.reduce((s, r) => s + r.UtilidadBruta, 0);
-  const margen = ((totalU / totalV) * 100).toFixed(1);
+  input.value = '';
+  appendMessage('user', q);
+  chatHistory.push({ role: 'user', content: q });
 
-  generateAIInsights();
-  const box = document.getElementById('aiOutput');
-  box.innerHTML = `<div class="p-2.5 rounded-xl bg-amber-500/15 border border-amber-400/30 text-amber-100">
-    <strong>Tu consulta:</strong> "${q}"<br/>
-    <strong>🧑‍🍳 Jhonny Crust recomienda:</strong> Con un margen actual de <b>${margen}%</b>, enfoca tus esfuerzos en el canal <b>${topCanal[0]}</b> y la sucursal <b>${topSuc[0]}</b>, impulsando ventas cruzadas alrededor de <b>${topProd[0]}</b> para maximizar la utilidad bruta.
-  </div>` + box.innerHTML;
-  document.getElementById('aiQuestion').value = '';
+  const ctx = getAnalyticsContext();
+  if (!ctx.totalTx) {
+    appendMessage('assistant', 'No tengo datos filtrados en este momento. Limpia los filtros para analizar la base completa.');
+    return;
+  }
+
+  // Si hay Gemini API Key configurada, llamamos a Gemini en tiempo real
+  if (geminiApiKey) {
+    const btn = document.getElementById('btnSendAI');
+    btn.disabled = true;
+    btn.textContent = 'Pensando...';
+
+    const systemPrompt = `Eres Jhonny Crust, Director Comercial y Estratega de Negocios de "San Francisco Crust Pizza".
+Tu estilo es directo, crítico, empático, analítico y orientado a decisiones comerciales reales (como un consultor senior).
+Usa los datos exactos del dashboard filtrado actualmente por el usuario:
+- Filtros activos: ${JSON.stringify(ctx.activeFilters)}
+- Ventas Totales: $${ctx.totalV.toFixed(2)} USD
+- Utilidad Bruta: $${ctx.totalU.toFixed(2)} USD
+- Margen Bruto: ${ctx.margen.toFixed(2)}%
+- Ticket Promedio: $${ctx.ticket.toFixed(2)} USD
+- Clientes únicos: ${ctx.clientes} | Transacciones: ${Math.round(ctx.totalTx)} | Frecuencia promedio: ${ctx.freq.toFixed(2)} compras/cliente
+- Ranking Productos (Top): ${ctx.prods.slice(0, 6).map(p => `${p[0]} ($${p[1].venta.toFixed(0)})`).join(', ')}
+- Ranking Sucursales: ${ctx.sucs.map(s => `${s[0]} ($${s[1].venta.toFixed(0)}, margen ${((s[1].util/s[1].venta)*100).toFixed(1)}%)`).join(', ')}
+- Ranking Segmentos: ${ctx.segs.map(s => `${s[0]} ($${s[1].venta.toFixed(0)})`).join(', ')}
+- Ranking Canales: ${ctx.canals.map(c => `${c[0]} ($${c[1].venta.toFixed(0)})`).join(', ')}
+
+Responde en español, con estructura clara, números concretos y sentido crítico.`;
+
+    const contents = chatHistory.slice(-8).map(m => ({
+      role: m.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: m.content.replace(/<[^>]*>/g, ' ') }]
+    }));
+
+    try {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(geminiApiKey)}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: systemPrompt }] },
+          contents
+        })
+      });
+      const data = await res.json();
+      const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (reply) {
+        const formatted = formatHTML(reply);
+        appendMessage('assistant', formatted);
+        chatHistory.push({ role: 'assistant', content: reply });
+      } else {
+        throw new Error(data?.error?.message || 'Respuesta vacía de la API');
+      }
+    } catch (err) {
+      const fallback = generateLocalConsultantReply(q, ctx);
+      appendMessage('assistant', `<span class="text-rose-300 text-[11px]">(Nota: No se pudo conectar con Gemini API: ${err.message}. Usando motor local)</span><br/>` + fallback);
+      chatHistory.push({ role: 'assistant', content: fallback });
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Enviar';
+    }
+    return;
+  }
+
+  // Modo local conversacional
+  const reply = generateLocalConsultantReply(q, ctx);
+  appendMessage('assistant', reply);
+  chatHistory.push({ role: 'assistant', content: reply });
 }
 
+updateApiBadge();
 seedInitialData();
 populateFilterOptions();
 applyFilters();
