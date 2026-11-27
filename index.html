@@ -49,11 +49,25 @@
       opacity: 0.45;
       cursor: not-allowed;
     }
-    #aiOutput::-webkit-scrollbar { width: 5px; }
-    #aiOutput::-webkit-scrollbar-thumb { background: rgba(251, 191, 36, 0.35); border-radius: 999px; }
+    #aiOutput::-webkit-scrollbar { width: 6px; }
+    #aiOutput::-webkit-scrollbar-thumb { background: rgba(251, 191, 36, 0.4); border-radius: 999px; }
+    .glass-modal {
+      background: rgba(11, 16, 29, 0.96);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(251, 191, 36, 0.35);
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85);
+    }
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.45); }
+      50% { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); }
+    }
+    .ai-fab-pulse {
+      animation: pulseGlow 2.4s infinite;
+    }
   </style>
 </head>
-<body class="p-4 md:p-6">
+<body class="p-4 md:p-6 pb-24">
 
   <!-- HEADER & UPLOAD BAR -->
   <header class="glass-card p-5 mb-6 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
@@ -100,6 +114,12 @@
 
       <button id="btnResetFilters" onclick="resetFilters()" disabled class="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 disabled:opacity-40 disabled:cursor-not-allowed text-xs font-semibold transition">
         Limpiar Filtros
+      </button>
+
+      <button onclick="openAiModal()" class="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500 hover:brightness-110 text-slate-950 font-extrabold text-xs flex items-center gap-2 shadow-lg shadow-orange-500/25 transition">
+        <span>🧑‍🍳</span>
+        <span>Jhonny Crust IA</span>
+        <span id="headerAiDot" class="w-2 h-2 rounded-full bg-slate-900"></span>
       </button>
     </div>
   </header>
@@ -169,8 +189,8 @@
     </div>
   </section>
 
-  <!-- BENTO GRID KPIs -->
-  <section class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+  <!-- BENTO GRID KPIs (10 INDICADORES) -->
+  <section class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
     <div class="glass-card p-4">
       <span class="text-xs text-slate-400">Ventas Totales</span>
       <p id="kpiVentas" class="text-xl md:text-2xl font-extrabold text-slate-500 mt-1">—</p>
@@ -201,93 +221,38 @@
       <p id="kpiTx" class="text-xl md:text-2xl font-extrabold text-slate-500 mt-1">—</p>
       <span class="text-[11px] text-slate-400">Órdenes registradas</span>
     </div>
+    <div class="glass-card p-4">
+      <span class="text-xs text-slate-400">Retención de Segmento</span>
+      <p id="kpiRetencion" class="text-xl md:text-2xl font-extrabold text-slate-500 mt-1">—</p>
+      <span id="kpiRetencionSub" class="text-[11px] text-slate-400">Recompra &amp; activos</span>
+    </div>
+    <div class="glass-card p-4">
+      <span class="text-xs text-slate-400">Unidades Vendidas</span>
+      <p id="kpiUnidades" class="text-xl md:text-2xl font-extrabold text-slate-500 mt-1">—</p>
+      <span id="kpiUnidadesSub" class="text-[11px] text-slate-400">Ítems totales despachados</span>
+    </div>
+    <div class="glass-card p-4">
+      <span class="text-xs text-slate-400">Tiempo de Entrega</span>
+      <p id="kpiEntrega" class="text-xl md:text-2xl font-extrabold text-slate-500 mt-1">—</p>
+      <span id="kpiEntregaSub" class="text-[11px] text-slate-400">Promedio operativo (min)</span>
+    </div>
+    <div class="glass-card p-4">
+      <span class="text-xs text-slate-400">Producto Mayor Rentabilidad</span>
+      <p id="kpiTopRentable" class="text-base md:text-lg font-extrabold text-slate-500 mt-1 truncate" title="—">—</p>
+      <span id="kpiTopRentableSub" class="text-[11px] text-slate-400">Líder en utilidad y margen</span>
+    </div>
   </section>
 
-  <!-- BENTO GRID GRÁFICOS + JHONNY CRUST -->
+  <!-- BENTO GRID GRÁFICOS -->
   <section class="grid grid-cols-1 lg:grid-cols-12 gap-5">
     
-    <!-- Evolución Temporal (6 cols) -->
-    <div class="glass-card p-5 lg:col-span-6 flex flex-col justify-between">
-      <h2 class="text-sm font-bold text-slate-200 mb-3">Evolución de Ventas y Utilidad Bruta</h2>
-      <div class="h-80"><canvas id="chartTendencia"></canvas></div>
-    </div>
-
-    <!-- Jhonny Crust — Consultor Estratégico IA Conversacional (6 cols) -->
-    <div class="glass-card p-5 lg:col-span-6 flex flex-col justify-between border-amber-400/35">
-      <div>
-        <div class="flex flex-wrap items-center justify-between gap-2 mb-2.5 pb-2.5 border-b border-white/10">
-          <div class="flex items-center gap-2.5">
-            <div class="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 via-orange-500 to-rose-500 flex items-center justify-center text-base shadow-md">
-              🧑‍🍳
-            </div>
-            <div>
-              <div class="flex items-center gap-2">
-                <h2 class="text-sm font-extrabold text-amber-300 leading-tight">Jhonny Crust</h2>
-                <span id="aiModeBadge" class="text-[10px] px-2 py-0.5 rounded-full bg-slate-700/60 text-slate-300 border border-white/10">
-                  En espera de datos
-                </span>
-              </div>
-              <p class="text-[11px] text-slate-400">Director Comercial IA • Crítico de Rentabilidad y Estrategia</p>
-            </div>
-          </div>
-
-          <div class="flex items-center gap-1.5">
-            <button onclick="toggleApiKeyBox()" class="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-slate-200 text-[11px] font-semibold transition" title="Configurar Gemini API Key">
-              ⚙️ API IA
-            </button>
-            <button id="btnResetChat" onclick="resetConversation()" disabled class="px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 disabled:opacity-40 disabled:cursor-not-allowed text-amber-300 text-[11px] font-semibold transition">
-              Nuevo Diagnóstico
-            </button>
-          </div>
-        </div>
-
-        <!-- Selector explícito de motor: Gemini IA vs Motor Analítico Local -->
-        <div class="flex flex-wrap items-center justify-between gap-2 mb-2.5 px-2.5 py-1.5 rounded-xl bg-slate-950/60 border border-white/10">
-          <span class="text-[11px] text-slate-300 font-medium">Modo de análisis:</span>
-          <div class="flex items-center gap-1.5">
-            <button id="btnModeGemini" onclick="selectEngineMode('gemini')" class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition border">
-              ✨ Gemini IA
-            </button>
-            <button id="btnModeLocal" onclick="selectEngineMode('local')" class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition border">
-              🧠 Motor Analítico Local
-            </button>
-          </div>
-        </div>
-
-        <!-- Caja opcional para API Key de Gemini -->
-        <div id="apiKeyBox" class="hidden mb-3 p-2.5 rounded-xl bg-slate-950/80 border border-amber-400/30 text-xs">
-          <p class="text-[11px] text-slate-300 mb-1.5">
-            Pega tu <b>Gemini API Key</b> (gratis en <i>aistudio.google.com</i>) para usar Gemini IA. Si la API gratuita tiene alta demanda, podrás alternar o usar el <b>Motor Analítico Local</b> sin perder tu clave:
-          </p>
-          <div class="flex gap-2">
-            <input id="geminiKeyInput" type="password" placeholder="AIzaSy..." class="glass-input flex-1 text-xs" />
-            <button onclick="saveApiKey()" class="px-3 py-1 rounded-lg bg-amber-500 text-slate-950 font-bold text-xs">Guardar</button>
-          </div>
-        </div>
-
-        <!-- Chips de preguntas rápidas -->
-        <div class="flex flex-wrap gap-1.5 mb-2.5">
-          <button id="chip1" disabled onclick="quickAsk('Dame 5 estrategias accionables para aumentar las ventas y el margen según estos datos')" class="text-[11px] px-2.5 py-1 rounded-lg bg-white/5 hover:bg-amber-500/20 hover:text-amber-200 disabled:opacity-40 disabled:cursor-not-allowed border border-white/10 transition">
-            💡 Dame 5 estrategias
-          </button>
-          <button id="chip2" disabled onclick="quickAsk('Hazme una crítica honesta: ¿dónde estamos perdiendo dinero o eficiencia?')" class="text-[11px] px-2.5 py-1 rounded-lg bg-white/5 hover:bg-amber-500/20 hover:text-amber-200 disabled:opacity-40 disabled:cursor-not-allowed border border-white/10 transition">
-            🔍 Crítica de debilidades
-          </button>
-          <button id="chip3" disabled onclick="quickAsk('¿Cómo subo el ticket promedio y qué combos recomiendas?')" class="text-[11px] px-2.5 py-1 rounded-lg bg-white/5 hover:bg-amber-500/20 hover:text-amber-200 disabled:opacity-40 disabled:cursor-not-allowed border border-white/10 transition">
-            📈 Subir ticket promedio
-          </button>
-        </div>
-
-        <!-- Historial de conversación -->
-        <div id="aiOutput" class="space-y-3 text-xs text-slate-200 leading-relaxed h-60 overflow-y-auto pr-1.5"></div>
+    <!-- Evolución Temporal (12 cols) -->
+    <div class="glass-card p-5 lg:col-span-12 flex flex-col justify-between">
+      <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+        <h2 class="text-sm font-bold text-slate-200">Evolución de Ventas y Utilidad Bruta</h2>
+        <span class="text-[11px] text-slate-400">Serie temporal según fechas y filtros activos</span>
       </div>
-
-      <div class="mt-3 pt-2.5 border-t border-white/10 flex gap-2">
-        <input id="aiQuestion" type="text" disabled placeholder="Primero suba las bases de datos para conversar con Jhonny Crust..." class="glass-input flex-1 text-xs" onkeydown="if(event.key==='Enter') askAI()" />
-        <button id="btnSendAI" disabled onclick="askAI()" class="px-4 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 disabled:opacity-40 disabled:cursor-not-allowed text-slate-950 font-bold text-xs transition">
-          Enviar
-        </button>
-      </div>
+      <div class="h-72"><canvas id="chartTendencia"></canvas></div>
     </div>
 
     <!-- Top Productos más vendidos (6 cols) -->
@@ -314,7 +279,155 @@
       <div class="h-60"><canvas id="chartSegmento"></canvas></div>
     </div>
 
+    <!-- Ranking Top 3 Mejores Productos con filtro propio Mensual / Trimestral (6 cols) -->
+    <div class="glass-card p-5 lg:col-span-6 flex flex-col justify-between border-amber-400/25">
+      <div>
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <div>
+            <h2 class="text-sm font-bold text-amber-300">🏆 Ranking: Top 3 Mejores Productos</h2>
+            <p class="text-[11px] text-slate-400">Evolución por ingresos y utilidad según granularidad</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-1.5">
+            <div class="inline-flex rounded-lg bg-slate-950/75 p-0.5 border border-white/10">
+              <button id="btnTop3ProdMensual" onclick="setTop3Granularity('prod', 'mensual')" class="px-2.5 py-1 rounded-md text-[11px] font-bold bg-amber-500 text-slate-950 transition">Mensual</button>
+              <button id="btnTop3ProdTrimestral" onclick="setTop3Granularity('prod', 'trimestral')" class="px-2.5 py-1 rounded-md text-[11px] font-bold text-slate-300 hover:text-white transition">Trimestral</button>
+            </div>
+            <select id="selTop3ProdPeriodo" disabled onchange="renderTop3Rankings()" class="glass-input text-xs py-1 px-2.5">
+              <option value="">Todos los periodos</option>
+            </select>
+          </div>
+        </div>
+        <div id="top3ProdBadges" class="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3"></div>
+      </div>
+      <div class="h-56"><canvas id="chartTop3Productos"></canvas></div>
+    </div>
+
+    <!-- Ranking Top 3 Mejores Sucursales con filtro propio Mensual / Trimestral (6 cols) -->
+    <div class="glass-card p-5 lg:col-span-6 flex flex-col justify-between border-sky-400/25">
+      <div>
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <div>
+            <h2 class="text-sm font-bold text-sky-300">🥇 Ranking: Top 3 Mejores Sucursales</h2>
+            <p class="text-[11px] text-slate-400">Comparativa de ventas y margen por periodo propio</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-1.5">
+            <div class="inline-flex rounded-lg bg-slate-950/75 p-0.5 border border-white/10">
+              <button id="btnTop3SucMensual" onclick="setTop3Granularity('suc', 'mensual')" class="px-2.5 py-1 rounded-md text-[11px] font-bold bg-sky-400 text-slate-950 transition">Mensual</button>
+              <button id="btnTop3SucTrimestral" onclick="setTop3Granularity('suc', 'trimestral')" class="px-2.5 py-1 rounded-md text-[11px] font-bold text-slate-300 hover:text-white transition">Trimestral</button>
+            </div>
+            <select id="selTop3SucPeriodo" disabled onchange="renderTop3Rankings()" class="glass-input text-xs py-1 px-2.5">
+              <option value="">Todos los periodos</option>
+            </select>
+          </div>
+        </div>
+        <div id="top3SucBadges" class="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3"></div>
+      </div>
+      <div class="h-56"><canvas id="chartTop3Sucursales"></canvas></div>
+    </div>
+
   </section>
+
+  <!-- BOTÓN FLOTANTE INFERIOR DERECHO PARA ABRIR JHONNY CRUST IA -->
+  <button id="fabAiBtn" onclick="openAiModal()" class="fixed bottom-6 right-6 z-40 px-5 py-3.5 rounded-2xl bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500 hover:brightness-110 text-slate-950 font-extrabold text-sm flex items-center gap-3 shadow-2xl shadow-orange-500/40 ai-fab-pulse transition">
+    <span class="text-xl">🧑‍🍳</span>
+    <div class="text-left">
+      <div class="leading-tight">Jhonny Crust IA</div>
+      <div id="fabSubText" class="text-[10px] font-semibold text-slate-900/80">Sube tus bases para iniciar</div>
+    </div>
+  </button>
+
+  <!-- PANTALLA EMERGENTE (MODAL) DE JHONNY CRUST IA -->
+  <div id="aiModalBackdrop" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 md:p-6" onclick="if(event.target===this) closeAiModal()">
+    <div class="glass-modal w-full max-w-4xl h-[88vh] rounded-3xl flex flex-col overflow-hidden">
+
+      <!-- Header del Modal -->
+      <div class="p-4 md:px-6 border-b border-white/10 flex flex-wrap items-center justify-between gap-3 bg-slate-900/80">
+        <div class="flex items-center gap-3">
+          <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-400 via-orange-500 to-rose-500 flex items-center justify-center text-xl shadow-lg">
+            🧑‍🍳
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h2 class="text-base font-extrabold text-amber-300 leading-tight">Jhonny Crust IA</h2>
+              <span id="aiModeBadge" class="text-[10px] px-2.5 py-0.5 rounded-full bg-slate-700/60 text-slate-300 border border-white/10">
+                En espera de datos
+              </span>
+            </div>
+            <p class="text-xs text-slate-400">Consultor Comercial Integral • Panorama completo, 5 hallazgos, comparativas por sucursal y fechas</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button onclick="toggleApiKeyBox()" class="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-slate-200 text-xs font-semibold transition" title="Configurar Gemini API Key">
+            ⚙️ API IA
+          </button>
+          <button id="btnResetChat" onclick="resetConversation()" disabled class="px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 disabled:opacity-40 disabled:cursor-not-allowed text-amber-300 text-xs font-semibold transition">
+            Nuevo Diagnóstico
+          </button>
+          <button onclick="closeAiModal()" class="w-9 h-9 rounded-xl bg-white/10 hover:bg-rose-500/30 hover:text-rose-200 text-slate-300 font-bold text-base flex items-center justify-center transition" title="Cerrar ventana">
+            ✕
+          </button>
+        </div>
+      </div>
+
+      <!-- Barra de contexto de filtros + Selector de Motor -->
+      <div class="px-4 md:px-6 py-2.5 bg-slate-950/70 border-b border-white/10">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div class="flex flex-col gap-0.5">
+            <span id="dbCoverageTag" class="text-[11px] font-medium text-slate-300">Bases cargadas: ninguna</span>
+            <span id="activeFilterSummaryTag" class="text-[11px] text-amber-300/90">Filtros: sin base cargada</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <span class="text-[11px] text-slate-400 mr-1">Modo:</span>
+            <button id="btnModeGemini" onclick="selectEngineMode('gemini')" class="px-3 py-1 rounded-lg text-xs font-bold transition border">
+              ✨ Gemini IA
+            </button>
+            <button id="btnModeLocal" onclick="selectEngineMode('local')" class="px-3 py-1 rounded-lg text-xs font-bold transition border">
+              🧠 Motor Analítico Local
+            </button>
+          </div>
+        </div>
+
+        <!-- Caja opcional para API Key de Gemini -->
+        <div id="apiKeyBox" class="hidden mt-2.5 p-3 rounded-xl bg-slate-900/95 border border-amber-400/35 text-xs">
+          <p class="text-[11px] text-slate-300 mb-1.5">
+            Pega tu <b>Gemini API Key</b> (gratis en <i>aistudio.google.com</i>) para usar Gemini IA. Si la API gratuita tiene alta demanda, podrás alternar o usar el <b>Motor Analítico Local</b> sin perder tu clave:
+          </p>
+          <div class="flex gap-2">
+            <input id="geminiKeyInput" type="password" placeholder="AIzaSy..." class="glass-input flex-1 text-xs" />
+            <button onclick="saveApiKey()" class="px-3.5 py-1.5 rounded-lg bg-amber-500 text-slate-950 font-bold text-xs">Guardar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chips de preguntas rápidas -->
+      <div class="px-4 md:px-6 py-2.5 bg-slate-900/40 border-b border-white/10 flex flex-wrap gap-2">
+        <button id="chip1" disabled onclick="quickAsk('Dame los 5 hallazgos más relevantes viendo todo el panorama de ventas, sucursales, fechas, productos, segmentos y canales')" class="text-xs px-3 py-1.5 rounded-xl bg-white/5 hover:bg-amber-500/20 hover:text-amber-200 disabled:opacity-40 disabled:cursor-not-allowed border border-white/10 transition">
+          🔎 Los 5 hallazgos más relevantes
+        </button>
+        <button id="chip2" disabled onclick="quickAsk('Dame una comparativa detallada por sucursales y por las fechas filtradas')" class="text-xs px-3 py-1.5 rounded-xl bg-white/5 hover:bg-amber-500/20 hover:text-amber-200 disabled:opacity-40 disabled:cursor-not-allowed border border-white/10 transition">
+          📊 Comparativa sucursales y fechas
+        </button>
+        <button id="chip3" disabled onclick="quickAsk('Dame 5 estrategias accionables para aumentar las ventas y el margen según estos datos')" class="text-xs px-3 py-1.5 rounded-xl bg-white/5 hover:bg-amber-500/20 hover:text-amber-200 disabled:opacity-40 disabled:cursor-not-allowed border border-white/10 transition">
+          💡 5 estrategias accionables
+        </button>
+        <button id="chip4" disabled onclick="quickAsk('Hazme una crítica honesta: ¿dónde estamos perdiendo dinero, margen o eficiencia?')" class="text-xs px-3 py-1.5 rounded-xl bg-white/5 hover:bg-amber-500/20 hover:text-amber-200 disabled:opacity-40 disabled:cursor-not-allowed border border-white/10 transition">
+          🔍 Crítica de debilidades
+        </button>
+      </div>
+
+      <!-- Historial de conversación -->
+      <div id="aiOutput" class="flex-1 p-4 md:p-6 space-y-3 text-xs md:text-sm text-slate-200 leading-relaxed overflow-y-auto"></div>
+
+      <!-- Input de chat -->
+      <div class="p-4 md:px-6 border-t border-white/10 bg-slate-900/80 flex gap-2.5">
+        <input id="aiQuestion" type="text" disabled placeholder="Primero suba las bases de datos para conversar con Jhonny Crust..." class="glass-input flex-1 text-xs md:text-sm py-2.5" onkeydown="if(event.key==='Enter') askAI()" />
+        <button id="btnSendAI" disabled onclick="askAI()" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 disabled:opacity-40 disabled:cursor-not-allowed text-slate-950 font-extrabold text-xs md:text-sm transition">
+          Enviar
+        </button>
+      </div>
+    </div>
+  </div>
 
 <script>
 let rawVentas = [];
@@ -331,6 +444,8 @@ let lastAiTopic = 'general';
 let uploadedV = null;
 let uploadedC = null;
 let uploadedP = null;
+let top3ProdGranularity = 'mensual';
+let top3SucGranularity = 'mensual';
 
 function cleanId(val) {
   return val === undefined || val === null ? '' : String(val).trim();
@@ -370,6 +485,62 @@ function setUploadBadge(type, mode) {
   }
 }
 
+function openAiModal() {
+  document.getElementById('aiModalBackdrop').classList.remove('hidden');
+  refreshModalContextLabels();
+  if (uploadedV && rawVentas.length) {
+    setTimeout(() => document.getElementById('aiQuestion').focus(), 80);
+  }
+}
+
+function closeAiModal() {
+  document.getElementById('aiModalBackdrop').classList.add('hidden');
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeAiModal();
+});
+
+function refreshModalContextLabels() {
+  const parts = [];
+  if (uploadedV) parts.push(`Ventas (${uploadedV.length.toLocaleString()})`);
+  if (uploadedC) parts.push(`Clientes (${uploadedC.length.toLocaleString()})`);
+  if (uploadedP) parts.push(`Productos (${uploadedP.length.toLocaleString()})`);
+  const covEl = document.getElementById('dbCoverageTag');
+  if (covEl) {
+    covEl.textContent = parts.length ? `Bases cargadas: ${parts.join(' • ')}` : 'Bases cargadas: ninguna';
+  }
+
+  const fltEl = document.getElementById('activeFilterSummaryTag');
+  if (!fltEl) return;
+  if (!uploadedV || !rawVentas.length) {
+    fltEl.textContent = 'Filtros: sin base cargada';
+    return;
+  }
+
+  const fIni = document.getElementById('fFechaInicio').value;
+  const fFin = document.getElementById('fFechaFin').value;
+  const fCiu = document.getElementById('fCiudad').value;
+  const fSuc = document.getElementById('fSucursal').value;
+  const fSeg = document.getElementById('fSegmento').value;
+  const fPro = document.getElementById('fProducto').value;
+  const fCan = document.getElementById('fCanal').value;
+  const fPag = document.getElementById('fMetodoPago').value;
+
+  const active = [];
+  if (fIni || fFin) active.push(`Fechas: ${fIni || 'inicio'} → ${fFin || 'fin'}`);
+  if (fCiu) active.push(`Ciudad: ${fCiu}`);
+  if (fSuc) active.push(`Sucursal: ${fSuc}`);
+  if (fSeg) active.push(`Segmento: ${fSeg}`);
+  if (fPro) active.push(`Producto: ${fPro}`);
+  if (fCan) active.push(`Canal: ${fCan}`);
+  if (fPag) active.push(`Pago: ${fPag}`);
+
+  fltEl.textContent = active.length
+    ? `Filtros activos: ${active.join(' | ')} (${currentFiltered.length.toLocaleString()} registros)`
+    : `Vista global sin filtros (${currentFiltered.length.toLocaleString()} registros)`;
+}
+
 function setWorkspaceEnabled(enabled) {
   const banner = document.getElementById('emptyBanner');
   if (enabled) {
@@ -379,16 +550,27 @@ function setWorkspaceEnabled(enabled) {
   }
 
   ['fFechaInicio', 'fFechaFin', 'fCiudad', 'fSucursal', 'fSegmento', 'fProducto', 'fCanal', 'fMetodoPago',
-   'btnResetFilters', 'btnResetChat', 'chip1', 'chip2', 'chip3', 'aiQuestion', 'btnSendAI'].forEach(id => {
+   'selTop3ProdPeriodo', 'selTop3SucPeriodo',
+   'btnResetFilters', 'btnResetChat', 'chip1', 'chip2', 'chip3', 'chip4', 'aiQuestion', 'btnSendAI'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.disabled = !enabled;
   });
 
   const qInput = document.getElementById('aiQuestion');
   qInput.placeholder = enabled
-    ? 'Conversa con Jhonny Crust (ej: Dame 5 estrategias para aplicar hoy)...'
+    ? 'Conversa con Jhonny Crust (ej: 5 hallazgos, comparativa por sucursales y fechas, estrategias)...'
     : 'Primero suba las bases de datos para conversar con Jhonny Crust...';
 
+  const fabSub = document.getElementById('fabSubText');
+  if (fabSub) {
+    fabSub.textContent = enabled ? 'Abrir análisis y comparativas' : 'Sube tus bases para iniciar';
+  }
+  const dot = document.getElementById('headerAiDot');
+  if (dot) {
+    dot.className = enabled ? 'w-2 h-2 rounded-full bg-emerald-950 animate-ping' : 'w-2 h-2 rounded-full bg-slate-900';
+  }
+
+  refreshModalContextLabels();
   updateEngineButtons();
   updateApiBadge();
 }
@@ -473,18 +655,28 @@ function saveApiKey() {
 function renderEmptyState() {
   setWorkspaceEnabled(false);
 
-  const kpiIds = ['kpiVentas', 'kpiUtilidad', 'kpiMargen', 'kpiTicket', 'kpiClientes', 'kpiTx'];
+  const kpiIds = ['kpiVentas', 'kpiUtilidad', 'kpiMargen', 'kpiTicket', 'kpiClientes', 'kpiTx', 'kpiRetencion', 'kpiUnidades', 'kpiEntrega', 'kpiTopRentable'];
   kpiIds.forEach(id => {
     const el = document.getElementById(id);
     el.textContent = '—';
-    el.className = 'text-xl md:text-2xl font-extrabold text-slate-500 mt-1';
+    el.className = id === 'kpiTopRentable'
+      ? 'text-base md:text-lg font-extrabold text-slate-500 mt-1 truncate'
+      : 'text-xl md:text-2xl font-extrabold text-slate-500 mt-1';
   });
+  document.getElementById('kpiRetencionSub').textContent = 'Recompra & activos';
+  document.getElementById('kpiUnidadesSub').textContent = 'Ítems totales despachados';
+  document.getElementById('kpiEntregaSub').textContent = 'Promedio operativo (min)';
+  document.getElementById('kpiTopRentableSub').textContent = 'Líder en utilidad y margen';
+  document.getElementById('top3ProdBadges').innerHTML = '';
+  document.getElementById('top3SucBadges').innerHTML = '';
 
   renderChart('chartTendencia', 'line', [], []);
   renderChart('chartProductos', 'bar', [], [], { indexAxis: 'y' });
   renderChart('chartSucursal', 'bar', [], []);
   renderChart('chartCiudad', 'doughnut', [], []);
   renderChart('chartSegmento', 'bar', [], []);
+  renderChart('chartTop3Productos', 'bar', [], []);
+  renderChart('chartTop3Sucursales', 'bar', [], []);
 
   const box = document.getElementById('aiOutput');
   box.innerHTML = `
@@ -618,11 +810,18 @@ function rebuildFromUploads() {
       ? Number(v.UtilidadBruta)
       : (Number.isFinite(ventaNeta) && Number.isFinite(costoTotal) ? ventaNeta - costoTotal : 0);
 
+    const rawUnits = v.Cantidad ?? v.Unidades ?? v.Qty ?? v.UnidadesVendidas ?? 1;
+    const unidades = Number(rawUnits);
+    const rawDelivery = v.TiempoEntregaMin ?? v.TiempoEntrega ?? v.DeliveryMin ?? v.MinutosEntrega ?? v.Tiempo_Entrega;
+    const tiempoEntrega = rawDelivery !== undefined && rawDelivery !== '' && rawDelivery !== null ? Number(rawDelivery) : NaN;
+    const estadoCli = cli.Estado ? String(cli.Estado).trim().toLowerCase() : (cli.Activo !== undefined ? String(cli.Activo).trim().toLowerCase() : '');
+
     return {
       Fecha: parseExcelDate(v.Fecha),
       Ciudad: v.Ciudad ? String(v.Ciudad).trim() : (cli.Ciudad ? String(cli.Ciudad).trim() : 'Sin Ciudad'),
       Sucursal: v.Sucursal ? String(v.Sucursal).trim() : 'Sin Sucursal',
       ClienteID: cid,
+      ClienteEstado: estadoCli,
       ProductoID: pid,
       ProductoNombre: formatProductLabel(prod, pid),
       Segmento: cli.Segmento ? String(cli.Segmento).trim() : 'Sin Segmento',
@@ -630,6 +829,8 @@ function rebuildFromUploads() {
       MetodoPago: v.FormaPago ? String(v.FormaPago).trim() : (v.MetodoPago ? String(v.MetodoPago).trim() : 'No especificado'),
       VentaNeta: Number.isFinite(ventaNeta) ? ventaNeta : 0,
       UtilidadBruta: Number.isFinite(utilidadBruta) ? utilidadBruta : 0,
+      Unidades: Number.isFinite(unidades) && unidades > 0 ? unidades : 1,
+      TiempoEntrega: Number.isFinite(tiempoEntrega) && tiempoEntrega > 0 ? tiempoEntrega : null,
       TxCount: 1
     };
   });
@@ -690,6 +891,7 @@ function applyFilters() {
     return true;
   });
 
+  refreshModalContextLabels();
   updateDashboard(currentFiltered);
 }
 
@@ -697,40 +899,259 @@ function groupSum(rows, keyFn) {
   const acc = {};
   rows.forEach(r => {
     const k = keyFn(r) || 'Sin Dato';
-    if (!acc[k]) acc[k] = { venta: 0, util: 0, tx: 0 };
+    if (!acc[k]) acc[k] = { venta: 0, util: 0, tx: 0, units: 0, deliverySum: 0, deliveryCount: 0, clientesSet: new Set(), clienteTx: {} };
     acc[k].venta += r.VentaNeta;
     acc[k].util += r.UtilidadBruta;
     acc[k].tx += r.TxCount;
+    acc[k].units += (r.Unidades || 1);
+    if (r.TiempoEntrega !== null && Number.isFinite(r.TiempoEntrega)) {
+      acc[k].deliverySum += r.TiempoEntrega;
+      acc[k].deliveryCount += 1;
+    }
+    if (r.ClienteID) {
+      acc[k].clientesSet.add(r.ClienteID);
+      acc[k].clienteTx[r.ClienteID] = (acc[k].clienteTx[r.ClienteID] || 0) + 1;
+    }
   });
   return acc;
 }
 
-function updateDashboard(rows) {
+function getQuarterKey(dateStr) {
+  if (!dateStr || dateStr.length < 7) return 'Sin Trimestre';
+  const year = dateStr.slice(0, 4);
+  const month = parseInt(dateStr.slice(5, 7), 10);
+  if (!Number.isFinite(month) || month < 1 || month > 12) return 'Sin Trimestre';
+  const q = Math.ceil(month / 3);
+  return `${year}-T${q}`;
+}
+
+function formatQuarterLabel(qKey) {
+  if (!qKey || !qKey.includes('-T')) return qKey;
+  const [yr, t] = qKey.split('-');
+  const mapNames = { T1: 'T1 (Ene-Mar)', T2: 'T2 (Abr-Jun)', T3: 'T3 (Jul-Sep)', T4: 'T4 (Oct-Dic)' };
+  return `${yr} • ${mapNames[t] || t}`;
+}
+
+function computeExtendedMetrics(rows) {
   const totalVentas = rows.reduce((s, r) => s + r.VentaNeta, 0);
   const totalUtil = rows.reduce((s, r) => s + r.UtilidadBruta, 0);
   const totalTx = rows.reduce((s, r) => s + r.TxCount, 0);
+  const totalUnits = rows.reduce((s, r) => s + (r.Unidades || 1), 0);
   const clientesUnicos = new Set(rows.map(r => r.ClienteID).filter(Boolean)).size;
   const margen = totalVentas > 0 ? (totalUtil / totalVentas) * 100 : 0;
   const ticket = totalTx > 0 ? totalVentas / totalTx : 0;
 
-  const setKpi = (id, text, colorClass) => {
+  // Retención de segmento: tasa de clientes recurrentes (>=2 compras) y retención en catálogo si existe
+  const segGrouped = groupSum(rows, r => r.Segmento);
+  const segRetentionList = Object.entries(segGrouped).map(([seg, data]) => {
+    const uniqueC = data.clientesSet.size;
+    const repeatC = Object.values(data.clienteTx).filter(cnt => cnt >= 2).length;
+    const rate = uniqueC > 0 ? (repeatC / uniqueC) * 100 : 0;
+    return { seg, uniqueC, repeatC, rate, venta: data.venta };
+  }).sort((a, b) => b.venta - a.venta);
+
+  const allClientCounts = {};
+  rows.forEach(r => {
+    if (r.ClienteID) allClientCounts[r.ClienteID] = (allClientCounts[r.ClienteID] || 0) + 1;
+  });
+  const totalUniqueC = Object.keys(allClientCounts).length;
+  const repeatClients = Object.values(allClientCounts).filter(c => c >= 2).length;
+  const retencionPct = totalUniqueC > 0 ? (repeatClients / totalUniqueC) * 100 : 0;
+  const topSegRet = segRetentionList[0];
+
+  // Tiempo de entrega promedio (si existe columna en Excel, o estimado realista por canal si no existe)
+  let delivSum = 0;
+  let delivCnt = 0;
+  rows.forEach(r => {
+    if (r.TiempoEntrega !== null && Number.isFinite(r.TiempoEntrega)) {
+      delivSum += r.TiempoEntrega;
+      delivCnt += 1;
+    }
+  });
+  let avgDelivery = 0;
+  let deliveryEstimated = false;
+  if (delivCnt > 0) {
+    avgDelivery = delivSum / delivCnt;
+  } else if (rows.length > 0) {
+    deliveryEstimated = true;
+    const estSum = rows.reduce((acc, r) => {
+      const c = (r.Canal || '').toLowerCase();
+      if (c.includes('local') || c.includes('salón') || c.includes('salon') || c.includes('mesa')) return acc + 16;
+      if (c.includes('recoger') || c.includes('pickup') || c.includes('llevar')) return acc + 20;
+      if (c.includes('app') || c.includes('uber') || c.includes('rappi') || c.includes('pedidos')) return acc + 31;
+      return acc + 28;
+    }, 0);
+    avgDelivery = estSum / rows.length;
+  }
+
+  // Productos de mayor rentabilidad (ranking por utilidad bruta y margen)
+  const prodGrouped = groupSum(rows, r => r.ProductoNombre);
+  const prodsByProfit = Object.entries(prodGrouped)
+    .map(([name, d]) => ({
+      name,
+      venta: d.venta,
+      util: d.util,
+      units: d.units,
+      margen: d.venta > 0 ? (d.util / d.venta) * 100 : 0
+    }))
+    .sort((a, b) => b.util - a.util);
+
+  return {
+    totalVentas, totalUtil, totalTx, totalUnits, clientesUnicos, margen, ticket,
+    retencionPct, repeatClients, totalUniqueC, topSegRet, segRetentionList,
+    avgDelivery, deliveryEstimated, prodsByProfit
+  };
+}
+
+function setTop3Granularity(target, mode) {
+  if (target === 'prod') {
+    top3ProdGranularity = mode;
+    document.getElementById('btnTop3ProdMensual').className = mode === 'mensual'
+      ? 'px-2.5 py-1 rounded-md text-[11px] font-bold bg-amber-500 text-slate-950 transition'
+      : 'px-2.5 py-1 rounded-md text-[11px] font-bold text-slate-300 hover:text-white transition';
+    document.getElementById('btnTop3ProdTrimestral').className = mode === 'trimestral'
+      ? 'px-2.5 py-1 rounded-md text-[11px] font-bold bg-amber-500 text-slate-950 transition'
+      : 'px-2.5 py-1 rounded-md text-[11px] font-bold text-slate-300 hover:text-white transition';
+    populateTop3PeriodSelect('prod');
+  } else {
+    top3SucGranularity = mode;
+    document.getElementById('btnTop3SucMensual').className = mode === 'mensual'
+      ? 'px-2.5 py-1 rounded-md text-[11px] font-bold bg-sky-400 text-slate-950 transition'
+      : 'px-2.5 py-1 rounded-md text-[11px] font-bold text-slate-300 hover:text-white transition';
+    document.getElementById('btnTop3SucTrimestral').className = mode === 'trimestral'
+      ? 'px-2.5 py-1 rounded-md text-[11px] font-bold bg-sky-400 text-slate-950 transition'
+      : 'px-2.5 py-1 rounded-md text-[11px] font-bold text-slate-300 hover:text-white transition';
+    populateTop3PeriodSelect('suc');
+  }
+  renderTop3Rankings();
+}
+
+function populateTop3PeriodSelect(target) {
+  const isProd = target === 'prod';
+  const mode = isProd ? top3ProdGranularity : top3SucGranularity;
+  const sel = document.getElementById(isProd ? 'selTop3ProdPeriodo' : 'selTop3SucPeriodo');
+  const prev = sel.value;
+
+  const keys = [...new Set(currentFiltered.map(r => {
+    if (!r.Fecha) return '';
+    return mode === 'mensual' ? r.Fecha.slice(0, 7) : getQuarterKey(r.Fecha);
+  }).filter(k => k && !k.startsWith('Sin')))].sort();
+
+  const defaultLabel = mode === 'mensual' ? 'Todos los meses' : 'Todos los trimestres';
+  sel.innerHTML = `<option value="">${defaultLabel}</option>` +
+    keys.map(k => `<option value="${k}">${mode === 'trimestral' ? formatQuarterLabel(k) : k}</option>`).join('');
+  sel.value = keys.includes(prev) ? prev : '';
+}
+
+function renderTop3Rankings() {
+  if (!uploadedV || !rawVentas.length) return;
+
+  // 1. Top 3 Mejores Productos
+  const prodPeriod = document.getElementById('selTop3ProdPeriodo').value;
+  const prodRows = currentFiltered.filter(r => {
+    if (!prodPeriod) return true;
+    const k = top3ProdGranularity === 'mensual' ? (r.Fecha ? r.Fecha.slice(0, 7) : '') : getQuarterKey(r.Fecha);
+    return k === prodPeriod;
+  });
+  const top3Prods = Object.entries(groupSum(prodRows, r => r.ProductoNombre))
+    .sort((a, b) => b[1].venta - a[1].venta)
+    .slice(0, 3);
+
+  const medals = ['🥇 #1', '🥈 #2', '🥉 #3'];
+  document.getElementById('top3ProdBadges').innerHTML = top3Prods.length
+    ? top3Prods.map((item, idx) => {
+        const mrg = item[1].venta > 0 ? ((item[1].util / item[1].venta) * 100).toFixed(1) : '0.0';
+        return `<div class="p-2.5 rounded-xl bg-slate-950/60 border border-white/10">
+          <div class="flex items-center justify-between text-[10px] font-bold text-amber-300">
+            <span>${medals[idx]}</span>
+            <span>${Math.round(item[1].units).toLocaleString('en-US')} uds</span>
+          </div>
+          <div class="text-xs font-extrabold text-white truncate mt-0.5" title="${item[0]}">${item[0]}</div>
+          <div class="text-[11px] text-slate-300 mt-0.5">$${item[1].venta.toLocaleString('en-US', {maximumFractionDigits:0})} • <span class="text-emerald-400">${mrg}% mrg</span></div>
+        </div>`;
+      }).join('')
+    : '<div class="col-span-3 text-xs text-slate-400 py-2">Sin ventas en este periodo.</div>';
+
+  renderChart('chartTop3Productos', 'bar', top3Prods.map(x => x[0]), [
+    { label: 'Ventas ($)', data: top3Prods.map(x => x[1].venta), backgroundColor: ['#f59e0b', '#fb923c', '#fbbf24'], borderRadius: 8 },
+    { label: 'Utilidad ($)', data: top3Prods.map(x => x[1].util), backgroundColor: ['#10b981', '#34d399', '#6ee7b7'], borderRadius: 8 }
+  ]);
+
+  // 2. Top 3 Mejores Sucursales
+  const sucPeriod = document.getElementById('selTop3SucPeriodo').value;
+  const sucRows = currentFiltered.filter(r => {
+    if (!sucPeriod) return true;
+    const k = top3SucGranularity === 'mensual' ? (r.Fecha ? r.Fecha.slice(0, 7) : '') : getQuarterKey(r.Fecha);
+    return k === sucPeriod;
+  });
+  const top3Sucs = Object.entries(groupSum(sucRows, r => r.Sucursal))
+    .sort((a, b) => b[1].venta - a[1].venta)
+    .slice(0, 3);
+
+  document.getElementById('top3SucBadges').innerHTML = top3Sucs.length
+    ? top3Sucs.map((item, idx) => {
+        const mrg = item[1].venta > 0 ? ((item[1].util / item[1].venta) * 100).toFixed(1) : '0.0';
+        return `<div class="p-2.5 rounded-xl bg-slate-950/60 border border-white/10">
+          <div class="flex items-center justify-between text-[10px] font-bold text-sky-300">
+            <span>${medals[idx]}</span>
+            <span>${Math.round(item[1].tx).toLocaleString('en-US')} órd.</span>
+          </div>
+          <div class="text-xs font-extrabold text-white truncate mt-0.5" title="${item[0]}">${item[0]}</div>
+          <div class="text-[11px] text-slate-300 mt-0.5">$${item[1].venta.toLocaleString('en-US', {maximumFractionDigits:0})} • <span class="text-emerald-400">${mrg}% mrg</span></div>
+        </div>`;
+      }).join('')
+    : '<div class="col-span-3 text-xs text-slate-400 py-2">Sin ventas en este periodo.</div>';
+
+  renderChart('chartTop3Sucursales', 'bar', top3Sucs.map(x => x[0]), [
+    { label: 'Ventas ($)', data: top3Sucs.map(x => x[1].venta), backgroundColor: ['#38bdf8', '#0ea5e9', '#7dd3fc'], borderRadius: 8 },
+    { label: 'Utilidad ($)', data: top3Sucs.map(x => x[1].util), backgroundColor: ['#10b981', '#34d399', '#6ee7b7'], borderRadius: 8 }
+  ]);
+}
+
+function updateDashboard(rows) {
+  const m = computeExtendedMetrics(rows);
+
+  const setKpi = (id, text, colorClass, sizeClass = 'text-xl md:text-2xl') => {
     const el = document.getElementById(id);
     el.textContent = text;
-    el.className = `text-xl md:text-2xl font-extrabold ${colorClass} mt-1`;
+    el.className = `${sizeClass} font-extrabold ${colorClass} mt-1`;
   };
 
-  setKpi('kpiVentas', '$' + totalVentas.toLocaleString('en-US', { maximumFractionDigits: 0 }), 'text-white');
-  setKpi('kpiUtilidad', '$' + totalUtil.toLocaleString('en-US', { maximumFractionDigits: 0 }), 'text-amber-300');
-  setKpi('kpiMargen', margen.toFixed(1) + '%', 'text-emerald-400');
-  setKpi('kpiTicket', '$' + ticket.toFixed(2), 'text-sky-300');
-  setKpi('kpiClientes', clientesUnicos.toLocaleString('en-US'), 'text-purple-300');
-  setKpi('kpiTx', Math.round(totalTx).toLocaleString('en-US'), 'text-rose-300');
+  setKpi('kpiVentas', '$' + m.totalVentas.toLocaleString('en-US', { maximumFractionDigits: 0 }), 'text-white');
+  setKpi('kpiUtilidad', '$' + m.totalUtil.toLocaleString('en-US', { maximumFractionDigits: 0 }), 'text-amber-300');
+  setKpi('kpiMargen', m.margen.toFixed(1) + '%', 'text-emerald-400');
+  setKpi('kpiTicket', '$' + m.ticket.toFixed(2), 'text-sky-300');
+  setKpi('kpiClientes', m.clientesUnicos.toLocaleString('en-US'), 'text-purple-300');
+  setKpi('kpiTx', Math.round(m.totalTx).toLocaleString('en-US'), 'text-rose-300');
+
+  setKpi('kpiRetencion', m.retencionPct.toFixed(1) + '%', 'text-teal-300');
+  document.getElementById('kpiRetencionSub').textContent = m.topSegRet
+    ? `Líder: ${m.topSegRet.seg} (${m.topSegRet.rate.toFixed(0)}% recompra)`
+    : `${m.repeatClients} clientes recurrentes`;
+
+  setKpi('kpiUnidades', Math.round(m.totalUnits).toLocaleString('en-US'), 'text-orange-300');
+  const udsPorTx = m.totalTx > 0 ? (m.totalUnits / m.totalTx).toFixed(2) : '0.00';
+  document.getElementById('kpiUnidadesSub').textContent = `${udsPorTx} unidades por orden`;
+
+  setKpi('kpiEntrega', rows.length ? m.avgDelivery.toFixed(1) + ' min' : '—', 'text-indigo-300');
+  document.getElementById('kpiEntregaSub').textContent = rows.length
+    ? (m.deliveryEstimated ? 'Promedio estimado por canal' : 'Promedio real registrado')
+    : 'Promedio operativo (min)';
+
+  const bestProf = m.prodsByProfit[0];
+  const topRentEl = document.getElementById('kpiTopRentable');
+  topRentEl.textContent = bestProf ? bestProf.name : '—';
+  topRentEl.title = bestProf ? `${bestProf.name} ($${bestProf.util.toFixed(0)} util. | ${bestProf.margen.toFixed(1)}% margen)` : '—';
+  topRentEl.className = 'text-base md:text-lg font-extrabold text-lime-300 mt-1 truncate';
+  document.getElementById('kpiTopRentableSub').textContent = bestProf
+    ? `$${bestProf.util.toLocaleString('en-US', {maximumFractionDigits:0})} util. (${bestProf.margen.toFixed(1)}% margen)`
+    : 'Líder en utilidad y margen';
 
   const byMonth = groupSum(rows, r => r.Fecha ? r.Fecha.slice(0, 7) : 'Sin Fecha');
   const mLabels = Object.keys(byMonth).sort();
   renderChart('chartTendencia', 'line', mLabels, [
-    { label: 'Ventas ($)', data: mLabels.map(m => byMonth[m].venta), borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,0.15)', fill: true, tension: 0.35 },
-    { label: 'Utilidad ($)', data: mLabels.map(m => byMonth[m].util), borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.1)', fill: true, tension: 0.35 }
+    { label: 'Ventas ($)', data: mLabels.map(mo => byMonth[mo].venta), borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,0.15)', fill: true, tension: 0.35 },
+    { label: 'Utilidad ($)', data: mLabels.map(mo => byMonth[mo].util), borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.1)', fill: true, tension: 0.35 }
   ]);
 
   const byProd = groupSum(rows, r => r.ProductoNombre);
@@ -762,6 +1183,10 @@ function updateDashboard(rows) {
     backgroundColor: ['#a78bfa', '#f59e0b', '#38bdf8', '#fb7185'],
     borderRadius: 8
   }]);
+
+  populateTop3PeriodSelect('prod');
+  populateTop3PeriodSelect('suc');
+  renderTop3Rankings();
 
   resetConversation(true);
 }
@@ -795,12 +1220,19 @@ function getAnalyticsContext() {
   const freq = clientes > 0 ? totalTx / clientes : 0;
 
   const sortDesc = (obj) => Object.entries(obj).sort((a, b) => b[1].venta - a[1].venta);
-  const prods = sortDesc(groupSum(rows, r => r.ProductoNombre));
+  const prodGrouped = groupSum(rows, r => r.ProductoNombre);
+  const prods = sortDesc(prodGrouped);
+  const prodsProfit = Object.entries(prodGrouped).sort((a, b) => b[1].util - a[1].util);
   const sucs = sortDesc(groupSum(rows, r => r.Sucursal));
   const cities = sortDesc(groupSum(rows, r => r.Ciudad));
   const segs = sortDesc(groupSum(rows, r => r.Segmento));
   const canals = sortDesc(groupSum(rows, r => r.Canal));
   const payments = sortDesc(groupSum(rows, r => r.MetodoPago));
+
+  const monthsSorted = Object.entries(groupSum(rows, r => r.Fecha ? r.Fecha.slice(0, 7) : 'Sin Fecha'))
+    .sort((a, b) => a[0].localeCompare(b[0]));
+  const daysSorted = Object.entries(groupSum(rows, r => r.Fecha || 'Sin Fecha'))
+    .sort((a, b) => a[0].localeCompare(b[0]));
 
   const activeFilters = {
     fechaInicio: document.getElementById('fFechaInicio').value || 'Todas',
@@ -813,10 +1245,62 @@ function getAnalyticsContext() {
     metodoPago: document.getElementById('fMetodoPago').value || 'Todos'
   };
 
+  const ext = computeExtendedMetrics(rows);
   return {
     totalV, totalU, totalTx, clientes, margen, ticket, freq,
-    prods, sucs, cities, segs, canals, payments, activeFilters
+    totalUnits: ext.totalUnits,
+    retencionPct: ext.retencionPct,
+    segRetentionList: ext.segRetentionList,
+    avgDelivery: ext.avgDelivery,
+    deliveryEstimated: ext.deliveryEstimated,
+    prodsByProfit: ext.prodsByProfit,
+    prods, prodsProfit, sucs, cities, segs, canals, payments,
+    monthsSorted, daysSorted, activeFilters
   };
+}
+
+function buildBranchAndDateComparison(ctx) {
+  const sucLines = ctx.sucs.map((s, idx) => {
+    const share = ctx.totalV > 0 ? ((s[1].venta / ctx.totalV) * 100).toFixed(1) : '0.0';
+    const mrg = s[1].venta > 0 ? ((s[1].util / s[1].venta) * 100).toFixed(1) : '0.0';
+    const tkt = s[1].tx > 0 ? (s[1].venta / s[1].tx).toFixed(2) : '0.00';
+    return `${idx + 1}. <strong>${s[0]}</strong>: <strong>$${s[1].venta.toLocaleString('en-US', {maximumFractionDigits:0})}</strong> (${share}%) | Utilidad: <strong>$${s[1].util.toLocaleString('en-US', {maximumFractionDigits:0})}</strong> (Margen ${mrg}%) | Órdenes: ${Math.round(s[1].tx).toLocaleString('en-US')} | Ticket: $${tkt}`;
+  }).join('<br/>');
+
+  const rangoTxt = (ctx.activeFilters.fechaInicio !== 'Todas' || ctx.activeFilters.fechaFin !== 'Todas')
+    ? `Rango filtrado: <strong>${ctx.activeFilters.fechaInicio}</strong> a <strong>${ctx.activeFilters.fechaFin}</strong>`
+    : 'Todo el periodo disponible en los filtros actuales';
+
+  let dateLines = '';
+  if (ctx.monthsSorted.length > 1) {
+    dateLines = ctx.monthsSorted.map((m, i) => {
+      const prev = i > 0 ? ctx.monthsSorted[i - 1][1].venta : null;
+      const diffPct = prev && prev > 0 ? (((m[1].venta - prev) / prev) * 100) : null;
+      const varTxt = diffPct !== null ? ` (${diffPct >= 0 ? '+' : ''}${diffPct.toFixed(1)}% vs mes previo)` : '';
+      const mrgM = m[1].venta > 0 ? ((m[1].util / m[1].venta) * 100).toFixed(1) : '0.0';
+      return `• <strong>${m[0]}</strong>: $${m[1].venta.toLocaleString('en-US', {maximumFractionDigits:0})} venta | $${m[1].util.toLocaleString('en-US', {maximumFractionDigits:0})} util. (${mrgM}% margen)${varTxt}`;
+    }).join('<br/>');
+  } else if (ctx.daysSorted.length > 0) {
+    dateLines = ctx.daysSorted.slice(-12).map(d => {
+      const mrgD = d[1].venta > 0 ? ((d[1].util / d[1].venta) * 100).toFixed(1) : '0.0';
+      return `• <strong>${d[0]}</strong>: $${d[1].venta.toLocaleString('en-US', {maximumFractionDigits:0})} venta | $${d[1].util.toLocaleString('en-US', {maximumFractionDigits:0})} util. (${mrgD}% margen) | ${Math.round(d[1].tx)} órdenes`;
+    }).join('<br/>');
+  } else {
+    dateLines = '• Sin fechas registradas para esta selección.';
+  }
+
+  const topSuc = ctx.sucs[0];
+  const lowSuc = ctx.sucs[ctx.sucs.length - 1];
+  const brecha = lowSuc && topSuc && topSuc[1].venta > 0
+    ? (((topSuc[1].venta - lowSuc[1].venta) / topSuc[1].venta) * 100).toFixed(1)
+    : '0.0';
+
+  return `Aquí tienes la <strong>comparativa por sucursales y por fechas</strong> (${rangoTxt}):<br/><br/>
+  <strong>🏪 Comparativa por Sucursales (brecha del ${brecha}% entre líder y menor venta):</strong><br/>
+  ${sucLines}<br/><br/>
+  <strong>📅 Comparativa por Fechas en la vista filtrada:</strong><br/>
+  ${dateLines}<br/><br/>
+  <strong>Lectura ejecutiva:</strong> <strong>${topSuc[0]}</strong> lidera en volumen y aporte de utilidad, mientras <strong>${lowSuc[0]}</strong> requiere revisar tráfico local, ticket promedio y comportamiento en los tramos de menor venta.`;
 }
 
 function formatHTML(text) {
@@ -922,21 +1406,57 @@ function generateLocalConsultantReply(q, ctx) {
     return `¡A ti! Siempre que muevas un filtro o cargues un nuevo <code>.xlsx</code>, aquí sigo para contrastar hipótesis y tomar decisiones con datos en mano. ¿Revisamos algún otro ángulo del negocio o lo dejamos ahí por hoy?`;
   }
 
+  const topProfit = ctx.prodsProfit[0];
+  const topCity = ctx.cities[0];
+
   let topic = lastAiTopic;
-  if (ql.includes('estrategia') || ql.includes('plan') || ql.includes('idea') || ql.includes('recomienda') || ql.includes('hacer') || ql.includes('aumentar') || ql.includes('subir') || ql.includes('aplicar')) {
+  if (ql.includes('compar') || ql.includes('sucursal') || ql.includes('fecha') || ql.includes('mes') || ql.includes('día') || ql.includes('dia') || ql.includes('evolución') || ql.includes('evolucion')) {
+    topic = 'comparativas';
+  } else if (ql.includes('hallazgo') || ql.includes('relevante') || ql.includes('panorama') || ql.includes('resumen') || ql.includes('descubr') || ql.includes('insight') || ql.includes('todo')) {
+    topic = 'hallazgos';
+  } else if (ql.includes('estrategia') || ql.includes('plan') || ql.includes('idea') || ql.includes('recomienda') || ql.includes('hacer') || ql.includes('aumentar') || ql.includes('subir') || ql.includes('aplicar')) {
     topic = 'estrategias';
   } else if (ql.includes('problema') || ql.includes('critic') || ql.includes('crític') || ql.includes('mal') || ql.includes('debilidad') || ql.includes('perdiendo') || ql.includes('riesgo') || ql.includes('foco rojo')) {
     topic = 'critica';
-  } else if (ql.includes('sucursal') || ql.includes('ciudad') || ql.includes('local') || ql.includes('tienda')) {
+  } else if (ql.includes('ciudad') || ql.includes('local') || ql.includes('tienda')) {
     topic = 'sucursales';
   } else if (ql.includes('producto') || ql.includes('pizza') || ql.includes('menu') || ql.includes('menú') || ql.includes('ticket') || ql.includes('combo')) {
     topic = 'productos';
   } else if (ql.includes('segmento') || ql.includes('cliente') || ql.includes('canal') || ql.includes('pago')) {
     topic = 'segmentos';
   } else if (!isFollowUp) {
-    topic = 'general';
+    topic = 'hallazgos';
   }
   lastAiTopic = topic;
+
+  if (topic === 'comparativas') {
+    return buildBranchAndDateComparison(ctx);
+  }
+
+  if (topic === 'hallazgos') {
+    const prodShare = ctx.totalV > 0 ? ((topProd[1].venta / ctx.totalV) * 100).toFixed(1) : '0.0';
+    const topProfitMrg = topProfit[1].venta > 0 ? ((topProfit[1].util / topProfit[1].venta) * 100).toFixed(1) : '0.0';
+    const sucGap = lowSuc && topSuc && topSuc[1].venta > 0 ? (((topSuc[1].venta - lowSuc[1].venta) / topSuc[1].venta) * 100).toFixed(1) : '0.0';
+    const canalShare = ctx.totalV > 0 ? ((topCanal[1].venta / ctx.totalV) * 100).toFixed(1) : '0.0';
+    let tempNote = '';
+    if (ctx.monthsSorted.length >= 2) {
+      const bestM = [...ctx.monthsSorted].sort((a, b) => b[1].venta - a[1].venta)[0];
+      const worstM = [...ctx.monthsSorted].sort((a, b) => a[1].venta - b[1].venta)[0];
+      tempNote = ` En el periodo hay variación entre <strong>${bestM[0]}</strong> ($${bestM[1].venta.toLocaleString('en-US', {maximumFractionDigits:0})}) y <strong>${worstM[0]}</strong> ($${worstM[1].venta.toLocaleString('en-US', {maximumFractionDigits:0})}).`;
+    }
+    return `Aquí tienes los <strong>5 hallazgos más relevantes</strong> considerando todo el panorama de tus bases y filtros actuales:<br/><br/>
+    <strong>1. Tracción en Ingresos vs. Rentabilidad por Producto:</strong><br/>
+    <strong>${topProd[0]}</strong> lidera las ventas con <strong>$${topProd[1].venta.toLocaleString('en-US', {maximumFractionDigits:0})}</strong> (${prodShare}% del total), mientras <strong>${topProfit[0]}</strong> aporta la mayor utilidad bruta con <strong>$${topProfit[1].util.toLocaleString('en-US', {maximumFractionDigits:0})}</strong> (${topProfitMrg}% de margen). Conviene empujar el mix hacia los productos con mayor margen real.<br/><br/>
+    <strong>2. Brecha Operativa entre Sucursales (${sucGap}%):</strong><br/>
+    <strong>${topSuc[0]}</strong> ($${topSuc[1].venta.toLocaleString('en-US', {maximumFractionDigits:0})}) y la plaza de <strong>${topCity[0]}</strong> encabezan los resultados, mientras <strong>${lowSuc[0]}</strong> ($${lowSuc[1].venta.toLocaleString('en-US', {maximumFractionDigits:0})}) muestra un rezago importante que amerita revisar cobertura, atención y ticket.<br/><br/>
+    <strong>3. Dinámica Temporal y Estacionalidad:</strong><br/>
+    Se registran <strong>${Math.round(ctx.totalTx).toLocaleString('en-US')} transacciones</strong> con margen bruto global de <strong>${ctx.margen.toFixed(1)}%</strong>.${tempNote}<br/><br/>
+    <strong>4. Desbalance entre Segmentos de Clientes:</strong><br/>
+    <strong>${topSeg[0]}</strong> concentra la mayor facturación ($${topSeg[1].venta.toLocaleString('en-US', {maximumFractionDigits:0})}) frente a <strong>${lowSeg[0]}</strong> ($${lowSeg[1].venta.toLocaleString('en-US', {maximumFractionDigits:0})}), con frecuencia media de <strong>${ctx.freq.toFixed(2)} órdenes por cliente</strong>.<br/><br/>
+    <strong>5. Concentración de Canales, Pagos y Palanca de Ticket ($${ctx.ticket.toFixed(2)}):</strong><br/>
+    El canal <strong>${topCanal[0]}</strong> representa el <strong>${canalShare}%</strong> de las ventas y <strong>${topPay ? topPay[0] : 'N/A'}</strong> es el método principal. Diseñar combos anclados en <strong>${secondProd[0]}</strong> y activar <strong>${lowCanal[0]}</strong> permite crecer sin depender de un solo frente.<br/><br/>
+    ¿Quieres ver la <strong>comparativa por sucursales y fechas</strong> o bajar estos hallazgos a <strong>5 estrategias accionables</strong>?`;
+  }
 
   if (topic === 'estrategias') {
     const prefix = isFollowUp
@@ -1019,9 +1539,17 @@ Usa los datos exactos del dashboard filtrado actualmente por el usuario:
 - Utilidad Bruta: $${ctx.totalU.toFixed(2)} USD
 - Margen Bruto: ${ctx.margen.toFixed(2)}%
 - Ticket Promedio: $${ctx.ticket.toFixed(2)} USD
-- Clientes únicos: ${ctx.clientes} | Transacciones: ${Math.round(ctx.totalTx)} | Frecuencia promedio: ${ctx.freq.toFixed(2)} compras/cliente
+- Clientes únicos: ${ctx.clientes} | Transacciones: ${Math.round(ctx.totalTx)} | Unidades vendidas: ${Math.round(ctx.totalUnits)} | Frecuencia promedio: ${ctx.freq.toFixed(2)} compras/cliente
+- Retención de segmento global: ${ctx.retencionPct.toFixed(1)}% (${ctx.segRetentionList.map(s => `${s.seg}: ${s.rate.toFixed(1)}%`).join(', ')})
+- Tiempo promedio de entrega: ${ctx.avgDelivery.toFixed(1)} min (${ctx.deliveryEstimated ? 'estimado por canal' : 'real'})
+- Top 3 Productos Mayor Rentabilidad: ${ctx.prodsByProfit.slice(0, 3).map(p => `${p.name} ($${p.util.toFixed(0)} util, ${p.margen.toFixed(1)}% margen)`).join(' | ')}
 - Ranking Productos (Top): ${ctx.prods.slice(0, 6).map(p => `${p[0]} ($${p[1].venta.toFixed(0)})`).join(', ')}
-- Ranking Sucursales: ${ctx.sucs.map(s => `${s[0]} ($${s[1].venta.toFixed(0)}, margen ${s[1].venta > 0 ? ((s[1].util/s[1].venta)*100).toFixed(1) : '0.0'}%)`).join(', ')}
+- Comparativa por Sucursales: ${ctx.sucs.map(s => `${s[0]} [Venta $${s[1].venta.toFixed(0)}, Utilidad $${s[1].util.toFixed(0)}, Margen ${s[1].venta > 0 ? ((s[1].util/s[1].venta)*100).toFixed(1) : '0.0'}%, Órdenes ${Math.round(s[1].tx)}, Ticket $${s[1].tx > 0 ? (s[1].venta/s[1].tx).toFixed(2) : '0.00'}]`).join(' | ')}
+- Evolución Mensual (Fechas filtradas): ${ctx.monthsSorted.map(m => `${m[0]}: $${m[1].venta.toFixed(0)} venta / $${m[1].util.toFixed(0)} util (${Math.round(m[1].tx)} tx)`).join(' | ') || 'Sin fechas'}
+- Detalle Diario Reciente/Filtrado: ${ctx.daysSorted.slice(-10).map(d => `${d[0]}: $${d[1].venta.toFixed(0)} (${Math.round(d[1].tx)} tx)`).join(' | ') || 'Sin fechas'}
+- Ranking Productos (Ventas): ${ctx.prods.slice(0, 6).map(p => `${p[0]} ($${p[1].venta.toFixed(0)})`).join(', ')}
+- Ranking Productos (Utilidad): ${ctx.prodsProfit.slice(0, 6).map(p => `${p[0]} ($${p[1].util.toFixed(0)})`).join(', ')}
+- Ranking Ciudades: ${ctx.cities.map(c => `${c[0]} ($${c[1].venta.toFixed(0)})`).join(', ')}
 - Ranking Segmentos: ${ctx.segs.map(s => `${s[0]} ($${s[1].venta.toFixed(0)})`).join(', ')}
 - Ranking Canales: ${ctx.canals.map(c => `${c[0]} ($${c[1].venta.toFixed(0)})`).join(', ')}
 - Ranking Métodos de pago: ${ctx.payments.map(p => `${p[0]} ($${p[1].venta.toFixed(0)})`).join(', ')}
