@@ -325,19 +325,34 @@
       <div class="h-56"><canvas id="chartTop3Sucursales"></canvas></div>
     </div>
 
-    <!-- Ranking de Métodos de Pago (12 cols) -->
-    <div class="glass-card p-5 lg:col-span-12 flex flex-col justify-between border-purple-400/25">
-      <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
-        <div>
-          <h2 class="text-sm font-bold text-purple-300">💳 Ranking de Métodos de Pago</h2>
-          <p class="text-[11px] text-slate-400">Participación por ingresos (USD), volumen de órdenes y ticket promedio</p>
+    <!-- Ventas por Canal (6 cols) -->
+    <div class="glass-card p-5 lg:col-span-6 flex flex-col justify-between border-emerald-400/25">
+      <div>
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <div>
+            <h2 class="text-sm font-bold text-emerald-300">🛵 Ventas y Utilidad por Canal</h2>
+            <p class="text-[11px] text-slate-400">Comparativa entre Delivery, Pickup y Restaurante</p>
+          </div>
+          <span id="canalSummaryTag" class="text-[11px] text-slate-400">Distribución por canal operativo</span>
         </div>
-        <span id="payRankSummaryTag" class="text-[11px] text-slate-400">Ordenado de mayor a menor facturación</span>
+        <div id="canalBadgesList" class="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3"></div>
       </div>
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
-        <div id="rankingPagosList" class="lg:col-span-6 space-y-2.5"></div>
-        <div class="lg:col-span-6 h-60"><canvas id="chartRankingPagos"></canvas></div>
+      <div class="h-60"><canvas id="chartCanal"></canvas></div>
+    </div>
+
+    <!-- Ranking de Métodos de Pago (6 cols) -->
+    <div class="glass-card p-5 lg:col-span-6 flex flex-col justify-between border-purple-400/25">
+      <div>
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <div>
+            <h2 class="text-sm font-bold text-purple-300">💳 Ranking de Métodos de Pago</h2>
+            <p class="text-[11px] text-slate-400">Participación por ingresos (USD), órdenes y ticket promedio</p>
+          </div>
+          <span id="payRankSummaryTag" class="text-[11px] text-slate-400">Ordenado por facturación</span>
+        </div>
+        <div id="rankingPagosList" class="space-y-2 mb-3 max-h-44 overflow-y-auto pr-1"></div>
       </div>
+      <div class="h-48"><canvas id="chartRankingPagos"></canvas></div>
     </div>
 
   </section>
@@ -684,8 +699,10 @@ function renderEmptyState() {
   document.getElementById('kpiTopRentableSub').textContent = 'Líder en utilidad y margen';
   document.getElementById('top3ProdBadges').innerHTML = '';
   document.getElementById('top3SucBadges').innerHTML = '';
+  document.getElementById('canalBadgesList').innerHTML = '';
+  document.getElementById('canalSummaryTag').textContent = 'Distribución por canal operativo';
   document.getElementById('rankingPagosList').innerHTML = '';
-  document.getElementById('payRankSummaryTag').textContent = 'Ordenado de mayor a menor facturación';
+  document.getElementById('payRankSummaryTag').textContent = 'Ordenado por facturación';
 
   renderChart('chartTendencia', 'line', [], []);
   renderChart('chartProductos', 'bar', [], [], { indexAxis: 'y' });
@@ -694,6 +711,7 @@ function renderEmptyState() {
   renderChart('chartSegmento', 'bar', [], []);
   renderChart('chartTop3Productos', 'bar', [], []);
   renderChart('chartTop3Sucursales', 'bar', [], []);
+  renderChart('chartCanal', 'bar', [], []);
   renderChart('chartRankingPagos', 'bar', [], [], { indexAxis: 'y' });
 
   const box = document.getElementById('aiOutput');
@@ -1127,6 +1145,60 @@ function renderTop3Rankings() {
 }
 
 
+
+function renderCanalChart(rows) {
+  const badgesEl = document.getElementById('canalBadgesList');
+  const tagEl = document.getElementById('canalSummaryTag');
+  if (!rows || !rows.length) {
+    badgesEl.innerHTML = '<div class="col-span-3 text-xs text-slate-400 py-2">Sin ventas por canal en esta selección.</div>';
+    tagEl.textContent = 'Sin datos en la selección';
+    renderChart('chartCanal', 'bar', [], []);
+    return;
+  }
+
+  const totalVentas = rows.reduce((s, r) => s + r.VentaNeta, 0);
+  const byCanal = groupSum(rows, r => r.Canal);
+  const canalSorted = Object.entries(byCanal).sort((a, b) => b[1].venta - a[1].venta);
+  const iconMap = {
+    delivery: '🛵',
+    pickup: '🛍️',
+    restaurante: '🍽️'
+  };
+
+  tagEl.textContent = `Líder: ${canalSorted[0][0]} (${totalVentas > 0 ? ((canalSorted[0][1].venta / totalVentas) * 100).toFixed(1) : '0.0'}%)`;
+
+  badgesEl.innerHTML = canalSorted.slice(0, 3).map(([canal, d]) => {
+    const share = totalVentas > 0 ? ((d.venta / totalVentas) * 100).toFixed(1) : '0.0';
+    const mrg = d.venta > 0 ? ((d.util / d.venta) * 100).toFixed(1) : '0.0';
+    const icon = iconMap[canal.toLowerCase()] || '📌';
+    return `
+      <div class="p-2.5 rounded-xl bg-slate-950/60 border border-white/10">
+        <div class="flex items-center justify-between text-[10px] font-bold text-emerald-300">
+          <span>${icon} ${canal}</span>
+          <span>${share}%</span>
+        </div>
+        <div class="text-xs font-extrabold text-white mt-0.5">$${d.venta.toLocaleString('en-US', { maximumFractionDigits: 0 })}</div>
+        <div class="text-[11px] text-slate-400 mt-0.5">${Math.round(d.tx).toLocaleString('en-US')} órd. • <span class="text-emerald-400">${mrg}% mrg</span></div>
+      </div>
+    `;
+  }).join('');
+
+  renderChart('chartCanal', 'bar', canalSorted.map(x => x[0]), [
+    {
+      label: 'Ventas ($)',
+      data: canalSorted.map(x => x[1].venta),
+      backgroundColor: '#10b981',
+      borderRadius: 8
+    },
+    {
+      label: 'Utilidad ($)',
+      data: canalSorted.map(x => x[1].util),
+      backgroundColor: '#38bdf8',
+      borderRadius: 8
+    }
+  ]);
+}
+
 function renderPaymentRanking(rows) {
   const listEl = document.getElementById('rankingPagosList');
   const tagEl = document.getElementById('payRankSummaryTag');
@@ -1261,6 +1333,7 @@ function updateDashboard(rows) {
   populateTop3PeriodSelect('prod');
   populateTop3PeriodSelect('suc');
   renderTop3Rankings();
+  renderCanalChart(rows);
   renderPaymentRanking(rows);
 
   resetConversation(true);
